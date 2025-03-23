@@ -1,4 +1,4 @@
-# Shift-To-Middle Array 🚀
+# Shift-To-Middle Array
 
 The **Shift-To-Middle Array** is a dynamic array designed to optimize **insertions and deletions at both ends**, offering a high-performance alternative to `std::deque`, `std::vector`, and linked lists. It achieves this while maintaining **contiguous memory storage**, improving **cache locality** and enabling **efficient parallel processing**.
 
@@ -13,6 +13,21 @@ The **Shift-To-Middle Array** is a dynamic array designed to optimize **insertio
 
 ## 📌 How It Works
 Unlike `std::deque`, which uses a fragmented block structure, the **Shift-To-Middle Array** dynamically **redistributes space** to avoid costly shifts. When resizing, elements are moved toward the middle, ensuring **efficient insertions at both ends** without excessive copying.
+
+## 🚀 Time Complexity Comparison
+
+The following table compares the time complexity of Shift-To-Middle Array operations with other common data structures:
+
+| Operation                  | ArrayList (`std::vector`) | Linked List | Shift-To-Middle Array |
+|---------------------------|--------------------------|-------------|-----------------------|
+| Access (by index)          | O(1)                     | O(n)        | O(1)                 |
+| Insertion at head          | O(n)                     | O(1)        | O(1) amortized       |
+| Insertion at tail          | O(1) amortized           | O(1)        | O(1) amortized       |
+| Insertion in middle        | O(n)                     | O(n)        | O(n)                 |
+| Deletion at head           | O(n)                     | O(1)        | O(1) amortized       |
+| Deletion at tail           | O(1)                     | O(1)        | O(1) amortized       |
+| Deletion in middle         | O(n)                     | O(n)        | O(n)                 |
+| Cache Locality             | Excellent                | Poor        | Excellent            |
 
 ## 🏆 Performance Benchmarks
 Benchmarks comparing **Shift-To-Middle Array vs. `std::deque` vs. ExpandingRingBuffer vs. `std::queue`** demonstrate that performance improvements depend on **CPU and GPU capabilities**, such as **multi-core parallelism, SIMD optimizations, and cache efficiency**.
