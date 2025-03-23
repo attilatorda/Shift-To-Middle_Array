@@ -78,9 +78,9 @@ void run_benchmarks_deque(int operations) {
         double stm_speedup = compute_speedup(best_time, stmArrayTime);
 
         cout << "Container size: " << size << "\n";
-        cout << "std::deque (avg over " << runs << " runs): " << stdDequeTime << " ms, Parallel: " << parallelStdDequeTime << " ms\n";
-        cout << "ExpandingRingBuffer (avg over " << runs << " runs): " << erBufferTime << " ms, Parallel: " << parallelErBufferTime << " ms\n";
-        cout << "ShiftToMiddleArray (avg over " << runs << " runs): " << stmArrayTime << " ms, Parallel: " << parallelStmArrayTime << " ms\n";
+        cout << "std::deque (avg over " << runs << " runs): " << stdDequeTime << " ms\n";
+        cout << "ExpandingRingBuffer (avg over " << runs << " runs): " << erBufferTime << " ms\n";
+        cout << "ShiftToMiddleArray (avg over " << runs << " runs): " << stmArrayTime << " ms\n";
         cout << "ShiftToMiddleArray was " << abs(stm_speedup) << "% "
              << (stm_speedup < 0 ? "slower" : "faster") << " than the best alternative.\n";
 
