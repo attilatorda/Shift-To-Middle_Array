@@ -59,10 +59,9 @@ To run the **Java benchmarks**, ensure you have the **Trove library** installed.
 javac -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove.java
 java -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove
 ```
-Full API reference and benchmarks are available in the [Wiki](#)!
 
 ## 📊 Benchmarks & Results
-For full benchmark details, check out the [benchmarks report](#). The provided **Python scripts** can be used to visualize performance metrics from CSV benchmark results.
+For full benchmark details, check out the [publication](ShiftToMiddleArray.pdf). The provided **Python scripts** can be used to visualize performance metrics from CSV benchmark results.
 
 ## 🏛 History
 The **Shift-To-Middle Array** was developed as part of an effort to create a more efficient **implementation strategy for lists and deques**. Traditional data structures, such as `std::deque` and linked lists, suffer from **poor cache locality** or **fragmented memory allocations**, leading to inefficiencies. By leveraging **contiguous memory**, dynamic mid-shifting, and modern CPU optimizations, Shift-To-Middle Array provides a **balanced solution** for insertion, deletion, and access performance.
