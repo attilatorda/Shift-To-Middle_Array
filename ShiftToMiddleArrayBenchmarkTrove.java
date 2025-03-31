@@ -119,552 +119,184 @@ public class ShiftToMiddleArrayBenchmarkTrove {
         return (end - start) / 1_000_000.0; // Convert to milliseconds
     }
 
-    static class ShiftToMiddleArray implements TIntList {
-        private int[] data;
-        private int head, tail, capacity;
-
-        public ShiftToMiddleArray(int initialCapacity) {
-            this.capacity = initialCapacity;
-            this.data = new int[capacity];
-            this.head = capacity / 2;
-            this.tail = head;
-        }
-
-        public ShiftToMiddleArray() {
-            this(16);
-        }
-
-        private void resize() {
-            int size = tail - head;
-
-			/*
-            if (size < capacity - 2) {
-                shift(size);
-                return;
-            }*/
-
-            int newCapacity = capacity * 2;
-            int[] newData = new int[newCapacity];
-            int newHead = (newCapacity - size) / 2;
-
-            System.arraycopy(data, head, newData, newHead, size);
-
-            data = newData;
-            tail = newHead + size;
-            head = newHead;
-            capacity = newCapacity;
-        }
-
-        private void shift(int size) {
-            int newHead = (capacity - size) / 2;
-            int newTail = newHead + size;
-
-            System.arraycopy(data, head, data, newHead, size);
-
-            head = newHead;
-            tail = newTail;
-        }
-
-        @Override
-        public int size() {
-            return tail - head;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return head == tail;
-        }
-
-        @Override
-        public boolean contains(int value) {
-            for (int i = head; i < tail; i++) {
-                if (data[i] == value) return true;
-            }
-            return false;
-        }
-
-        @Override
-        public int get(int index) {
-            if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
-            return data[head + index];
-        }
-
-        @Override
-        public int set(int index, int value) {
-            if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
-            int oldValue = data[head + index];
-            data[head + index] = value;
-            return oldValue;
-        }
-
-        @Override
-        public boolean add(int value) {
-            if (tail == capacity) resize();
-            data[tail++] = value;
-            return true;
-        }
-
-        public void add(int index, int value) {
-            if (index < 0 || index > size()) throw new IndexOutOfBoundsException();
-
-            int mid = (head + tail) / 2;
-            if (index < mid && head > 0) {
-                // Shift head left
-                head--;
-                for (int i = head; i < index; i++) {
-                    data[i] = data[i + 1];
-                }
-                data[index] = value;
-            } else if (tail < capacity) {
-                // Shift tail right
-                for (int i = tail; i > index; i--) {
-                    data[i] = data[i - 1];
-                }
-                data[index] = value;
-                tail++;
-            } else {
-                // Resize if needed
-                resize();
-                add(index, value);
-            }
-        }
-
-        @Override
-        public int removeAt(int index) {
-            if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
-            int oldValue = data[head + index];
-            for (int i = head + index; i < tail - 1; i++) {
-                data[i] = data[i + 1];
-            }
-            tail--;
-            return oldValue;
-        }
-
-        @Override
-        public void clear() {
-            head = tail = capacity / 2;
-        }
-
-        @Override
-        public TIntIterator iterator() {
-            return new TIntIterator() {
-                private int current = head;
-
-                @Override
-                public boolean hasNext() {
-                    return current < tail;
-                }
-
-                @Override
-                public int next() {
-                    if (!hasNext()) throw new NoSuchElementException();
-                    return data[current++];
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-        }
-
-        @Override
-        public int[] toArray() {
-            int[] array = new int[size()];
-            System.arraycopy(data, head, array, 0, size());
-            return array;
-        }
-
-        @Override
-        public boolean remove(int value) {
-            for (int i = head; i < tail; i++) {
-                if (data[i] == value) {
-                    removeAt(i - head);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public boolean addAll(Collection<? extends Integer> collection) {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean addAll(int index, Collection<? extends Integer> collection) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> collection) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> collection) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int indexOf(int value) {
-            for (int i = head; i < tail; i++) {
-                if (data[i] == value) return i - head;
-            }
-            return -1;
-        }
-
-        @Override
-        public int lastIndexOf(int value) {
-            for (int i = tail - 1; i >= head; i--) {
-                if (data[i] == value) return i - head;
-            }
-            return -1;
-        }
-
-        @Override
-        public int sum() {
-            int sum = 0;
-            for (int i = head; i < tail; i++) {
-                sum += data[i];
-            }
-            return sum;
-        }
-
-        @Override
-        public int min() {
-            if (isEmpty()) throw new NoSuchElementException();
-            int min = data[head];
-            for (int i = head + 1; i < tail; i++) {
-                if (data[i] < min) min = data[i];
-            }
-            return min;
-        }
-
-        @Override
-        public int max() {
-            if (isEmpty()) throw new NoSuchElementException();
-            int max = data[head];
-            for (int i = head + 1; i < tail; i++) {
-                if (data[i] > max) max = data[i];
-            }
-            return max;
-        }
-
-    @Override
-    public TIntList inverseGrep(TIntProcedure procedure) {
-        ShiftToMiddleArray result = new ShiftToMiddleArray();
-        for (int i = head; i < tail; i++) {
-            if (!procedure.execute(data[i])) {
-                result.add(data[i]);
-            }
-        }
-        return result;
+/**
+ * An implementation of TIntList that keeps elements centered in the underlying array,
+ * which can improve performance for operations that occur frequently at both ends.
+ */
+public static class ShiftToMiddleArray implements TIntList {
+    private int[] data;
+    private int head, tail, capacity;
+    private static final int DEFAULT_CAPACITY = 16;
+    private static final int NO_ENTRY_VALUE = Integer.MIN_VALUE;
+    
+    /**
+     * Constructs a ShiftToMiddleArray with specified initial capacity.
+     *
+     * @param initialCapacity the initial capacity of the array
+     */
+    public ShiftToMiddleArray(int initialCapacity) {
+        this.capacity = initialCapacity;
+        this.data = new int[capacity];
+        this.head = capacity / 2;
+        this.tail = head;
     }
-	
-    @Override
-    public TIntList grep(TIntProcedure procedure) {
-        ShiftToMiddleArray result = new ShiftToMiddleArray();
-        for (int i = head; i < tail; i++) {
-            if (procedure.execute(data[i])) {
-                result.add(data[i]);
-            }
-        }
-        return result;
+    
+    /**
+     * Constructs a ShiftToMiddleArray with default capacity.
+     */
+    public ShiftToMiddleArray() {
+        this(DEFAULT_CAPACITY);
     }
+    
+    //-------------------------------------------------------------------------
+    // Core operations
+    //-------------------------------------------------------------------------
+    
+    /**
+     * Resizes the underlying array.
+     */
+    private void resize() {
+        int size = tail - head;
 
+        // Uncomment to enable shifting instead of resizing when possible
+        /*
+        if (size < capacity - 2) {
+            shift(size);
+            return;
+        }*/
+
+        int newCapacity = capacity * 2;
+        int[] newData = new int[newCapacity];
+        int newHead = (newCapacity - size) / 2;
+
+        System.arraycopy(data, head, newData, newHead, size);
+
+        data = newData;
+        tail = newHead + size;
+        head = newHead;
+        capacity = newCapacity;
+    }
+    
+    /**
+     * Shifts elements to the middle of the array.
+     *
+     * @param size the number of elements in the array
+     */
+    private void shift(int size) {
+        int newHead = (capacity - size) / 2;
+        int newTail = newHead + size;
+
+        System.arraycopy(data, head, data, newHead, size);
+
+        head = newHead;
+        tail = newTail;
+    }
+    
     @Override
-    public boolean forEach(TIntProcedure procedure) {
-        for (int i = head; i < tail; i++) {
-            if (!procedure.execute(data[i])) {
-                return false;
-            }
-        }
+    public int size() {
+        return tail - head;
+    }
+    
+    @Override
+    public boolean isEmpty() {
+        return head == tail;
+    }
+    
+    @Override
+    public void clear() {
+        head = tail = capacity / 2;
+    }
+    
+    //-------------------------------------------------------------------------
+    // Element access operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public int get(int index) {
+        if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
+        return data[head + index];
+    }
+    
+    @Override
+    public int set(int index, int value) {
+        if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
+        int oldValue = data[head + index];
+        data[head + index] = value;
+        return oldValue;
+    }
+    
+    //-------------------------------------------------------------------------
+    // Addition operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public boolean add(int value) {
+        if (tail == capacity) resize();
+        data[tail++] = value;
         return true;
     }
+    
+    //@Override
+    public void add(int index, int value) {
+        if (index < 0 || index > size()) throw new IndexOutOfBoundsException();
 
+        int mid = (head + tail) / 2;
+        if (index < mid && head > 0) {
+            // Shift head left
+            head--;
+            for (int i = head; i < head + index; i++) {
+                data[i] = data[i + 1];
+            }
+            data[head + index] = value;
+        } else if (tail < capacity) {
+            // Shift tail right
+            for (int i = tail; i > head + index; i--) {
+                data[i] = data[i - 1];
+            }
+            data[head + index] = value;
+            tail++;
+        } else {
+            // Resize if needed
+            resize();
+            add(index, value);
+        }
+    }
+    
     @Override
-    public int[] toArray(int[] dest) {
-        if (dest.length < size()) {
-            dest = new int[size()];
+    public void insert(int offset, int value) {
+        if (offset < 0 || offset > size()) {
+            throw new IndexOutOfBoundsException();
         }
-        System.arraycopy(data, head, dest, 0, size());
-        return dest;
-    }
 
+        // Ensure there is enough capacity for the new element
+        if (tail == capacity) {
+            resize();
+        }
+
+        // Shift elements to the right to make space for the new element
+        System.arraycopy(data, head + offset, data, head + offset + 1, tail - (head + offset));
+
+        // Insert the new value
+        data[head + offset] = value;
+
+        // Update the tail pointer
+        tail++;
+    }
+    
     @Override
-    public void fill(int value) {
-        Arrays.fill(data, head, tail, value);
-    }
-
-    @Override
-    public int binarySearch(int value) {
-        int[] array = toArray();
-        return Arrays.binarySearch(array, value);
-    }
-
-    @Override
-    public void sort() {
-        Arrays.sort(data, head, tail);
-    }
-	
-	@Override
-public void sort(int fromIndex, int toIndex) {
-    if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
-        throw new IndexOutOfBoundsException();
-    }
-    Arrays.sort(data, head + fromIndex, head + toIndex);
-}
-
-	
-@Override
-public int lastIndexOf(int value, int end) {
-    if (end < 0 || end > size()) {
-        throw new IndexOutOfBoundsException();
-    }
-    for (int i = head + end - 1; i >= head; i--) {
-        if (data[i] == value) {
-            return i - head;
+    public void add(int[] values) {
+        // Ensure there is enough capacity for the new elements
+        while (tail + values.length > capacity) {
+            resize();
         }
+
+        // Copy values from the provided array into the list
+        System.arraycopy(values, 0, data, tail, values.length);
+
+        // Update the tail pointer
+        tail += values.length;
     }
-    return -1;
-}
-
-@Override
-public int indexOf(int value, int start) {
-    if (start < 0 || start > size()) {
-        throw new IndexOutOfBoundsException();
-    }
-    for (int i = head + start; i < tail; i++) {
-        if (data[i] == value) {
-            return i - head;
-        }
-    }
-    return -1;
-}	
-
-@Override
-public int binarySearch(int fromIndex, int toIndex, int value) {
-    if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Create a temporary array for the specified range
-    int[] tempArray = new int[toIndex - fromIndex];
-    System.arraycopy(data, head + fromIndex, tempArray, 0, toIndex - fromIndex);
-
-    // Perform binary search on the temporary array
-    return Arrays.binarySearch(tempArray, value);
-}
-
-@Override
-public void fill(int fromIndex, int toIndex, int value) {
-    if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Fill the specified range with the value
-    Arrays.fill(data, head + fromIndex, head + toIndex, value);
-}
-
-@Override
-public int replace(int oldValue, int newValue) {
-    int count = 0;
-    for (int i = head; i < tail; i++) {
-        if (data[i] == oldValue) {
-            data[i] = newValue;
-            count++;
-        }
-    }
-    return count;
-}
-
-@Override
-public void reverse() {
-    for (int i = head, j = tail - 1; i < j; i++, j--) {
-        int temp = data[i];
-        data[i] = data[j];
-        data[j] = temp;
-    }
-}
-
-@Override
-public int[] toArray(int[] dest, int offset, int length) {
-    if (length > size()) {
-        throw new IllegalArgumentException("Length exceeds list size");
-    }
-    System.arraycopy(data, head, dest, offset, length);
-    return dest;
-}
-
-@Override
-public boolean forEachDescending(TIntProcedure procedure) {
-    for (int i = tail - 1; i >= head; i--) {
-        if (!procedure.execute(data[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-@Override
-public int[] toArray(int[] dest, int sourceOffset, int destOffset, int length) {
-    if (sourceOffset < 0 || destOffset < 0 || length < 0 ||
-        sourceOffset + length > size() || destOffset + length > dest.length) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Copy elements from the list to the destination array
-    System.arraycopy(data, head + sourceOffset, dest, destOffset, length);
-
-    // Return the destination array
-    return dest;
-}
-
-@Override
-public int[] toArray(int offset, int length) {
-    if (offset < 0 || length < 0 || offset + length > size()) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Create a new array for the specified range
-    int[] result = new int[length];
-    System.arraycopy(data, head + offset, result, 0, length);
-
-    return result;
-}
-
-@Override
-public void shuffle(Random random) {
-    for (int i = tail - 1; i > head; i--) {
-        int j = head + random.nextInt(i - head + 1);
-        int temp = data[i];
-        data[i] = data[j];
-        data[j] = temp;
-    }
-}
-
-@Override
-public void reverse(int fromIndex, int toIndex) {
-    if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Reverse the specified range
-    for (int i = head + fromIndex, j = head + toIndex - 1; i < j; i++, j--) {
-        int temp = data[i];
-        data[i] = data[j];
-        data[j] = temp;
-    }
-}
-
-@Override
-public void transformValues(TIntFunction function) {
-    for (int i = head; i < tail; i++) {
-        data[i] = function.execute(data[i]);
-    }
-}
-
-@Override
-public void remove(int fromIndex, int toIndex) {
-    if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Calculate the number of elements to remove
-    int numToRemove = toIndex - fromIndex;
-
-    // Shift elements after the range to the left
-    System.arraycopy(data, head + toIndex, data, head + fromIndex, tail - (head + toIndex));
-
-    // Update the tail pointer
-    tail -= numToRemove;
-}
-
-@Override
-public void set(int offset, int[] values, int valuesOffset, int length) {
-    if (offset < 0 || valuesOffset < 0 || length < 0 ||
-        offset + length > size() || valuesOffset + length > values.length) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Copy values from the provided array into the list
-    System.arraycopy(values, valuesOffset, data, head + offset, length);
-}
-
-@Override
-public void set(int offset, int[] values) {
-    if (offset < 0 || offset + values.length > size()) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Copy values from the provided array into the list
-    System.arraycopy(values, 0, data, head + offset, values.length);
-}
-
-@Override
-public void insert(int offset, int[] values) {
-    if (offset < 0 || offset > size()) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Ensure there is enough capacity for the new elements
-    while (tail + values.length > capacity) {
-        resize();
-    }
-
-    // Shift elements to the right to make space for the new elements
-    System.arraycopy(data, head + offset, data, head + offset + values.length, tail - (head + offset));
-
-    // Copy values from the provided array into the list
-    System.arraycopy(values, 0, data, head + offset, values.length);
-
-    // Update the tail pointer
-    tail += values.length;
-}
-
-@Override
-public void insert(int offset, int[] values, int valuesOffset, int length) {
-    if (offset < 0 || valuesOffset < 0 || length < 0 ||
-        offset > size() || valuesOffset + length > values.length) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Ensure there is enough capacity for the new elements
-    while (tail + length > capacity) {
-        resize();
-    }
-
-    // Shift elements to the right to make space for the new elements
-    System.arraycopy(data, head + offset, data, head + offset + length, tail - (head + offset));
-
-    // Copy values from the provided array into the list
-    System.arraycopy(values, valuesOffset, data, head + offset, length);
-
-    // Update the tail pointer
-    tail += length;
-}
-
-@Override
-public void insert(int offset, int value) {
-    if (offset < 0 || offset > size()) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    // Ensure there is enough capacity for the new element
-    if (tail == capacity) {
-        resize();
-    }
-
-    // Shift elements to the right to make space for the new element
-    System.arraycopy(data, head + offset, data, head + offset + 1, tail - (head + offset));
-
-    // Insert the new value
-    data[head + offset] = value;
-
-    // Update the tail pointer
-    tail++;
-}
-
+    
     @Override
     public void add(int[] values, int offset, int length) {
         if (offset < 0 || length < 0 || offset + length > values.length) {
@@ -676,26 +308,133 @@ public void insert(int offset, int value) {
         System.arraycopy(values, offset, data, tail, length);
         tail += length;
     }
+    
+    @Override
+    public boolean addAll(int[] values) {
+        // Ensure there is enough capacity for the new elements
+        while (tail + values.length > capacity) {
+            resize();
+        }
 
-@Override
-public int getNoEntryValue() {
-    return Integer.MIN_VALUE; // Custom no-entry value for TIntList
-}
+        // Copy values from the provided array into the list
+        System.arraycopy(values, 0, data, tail, values.length);
 
-@Override
-public void add(int[] values) {
-    // Ensure there is enough capacity for the new elements
-    while (tail + values.length > capacity) {
-        resize();
+        // Update the tail pointer
+        tail += values.length;
+
+        // Return true if the list was modified
+        return values.length > 0;
     }
+    
+    @Override
+    public boolean addAll(TIntCollection collection) {
+        // Ensure there is enough capacity for the new elements
+        while (tail + collection.size() > capacity) {
+            resize();
+        }
 
-    // Copy values from the provided array into the list
-    System.arraycopy(values, 0, data, tail, values.length);
+        // Copy values from the provided collection into the list
+        TIntIterator iterator = collection.iterator();
+        while (iterator.hasNext()) {
+            data[tail++] = iterator.next();
+        }
 
-    // Update the tail pointer
-    tail += values.length;
-}
+        // Return true if the list was modified
+        return !collection.isEmpty();
+    }
+    
+    @Override
+    public boolean addAll(Collection<? extends Integer> collection) {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public void insert(int offset, int[] values) {
+        if (offset < 0 || offset > size()) {
+            throw new IndexOutOfBoundsException();
+        }
 
+        // Ensure there is enough capacity for the new elements
+        while (tail + values.length > capacity) {
+            resize();
+        }
+
+        // Shift elements to the right to make space for the new elements
+        System.arraycopy(data, head + offset, data, head + offset + values.length, tail - (head + offset));
+
+        // Copy values from the provided array into the list
+        System.arraycopy(values, 0, data, head + offset, values.length);
+
+        // Update the tail pointer
+        tail += values.length;
+    }
+    
+    @Override
+    public void insert(int offset, int[] values, int valuesOffset, int length) {
+        if (offset < 0 || valuesOffset < 0 || length < 0 ||
+            offset > size() || valuesOffset + length > values.length) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Ensure there is enough capacity for the new elements
+        while (tail + length > capacity) {
+            resize();
+        }
+
+        // Shift elements to the right to make space for the new elements
+        System.arraycopy(data, head + offset, data, head + offset + length, tail - (head + offset));
+
+        // Copy values from the provided array into the list
+        System.arraycopy(values, valuesOffset, data, head + offset, length);
+
+        // Update the tail pointer
+        tail += length;
+    }
+    
+    //-------------------------------------------------------------------------
+    // Removal operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public int removeAt(int index) {
+        if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
+        int oldValue = data[head + index];
+        
+        // Shift elements to fill the gap
+        System.arraycopy(data, head + index + 1, data, head + index, tail - (head + index + 1));
+        tail--;
+        return oldValue;
+    }
+    
+    @Override
+    public boolean remove(int value) {
+        for (int i = head; i < tail; i++) {
+            if (data[i] == value) {
+                // Shift elements to fill the gap
+                System.arraycopy(data, i + 1, data, i, tail - i - 1);
+                tail--;
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public void remove(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Calculate the number of elements to remove
+        int numToRemove = toIndex - fromIndex;
+
+        // Shift elements after the range to the left
+        System.arraycopy(data, head + toIndex, data, head + fromIndex, tail - (head + toIndex));
+
+        // Update the tail pointer
+        tail -= numToRemove;
+    }
+    
     @Override
     public boolean removeAll(int[] values) {
         boolean modified = false;
@@ -704,7 +443,7 @@ public void add(int[] values) {
         }
         return modified;
     }
-
+    
     @Override
     public boolean removeAll(TIntCollection collection) {
         boolean modified = false;
@@ -715,7 +454,121 @@ public void add(int[] values) {
         }
         return modified;
     }
+    
+    @Override
+    public boolean removeAll(Collection<?> collection) {
+        throw new UnsupportedOperationException();
+    }
+    
+    //-------------------------------------------------------------------------
+    // Search operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public boolean contains(int value) {
+        for (int i = head; i < tail; i++) {
+            if (data[i] == value) return true;
+        }
+        return false;
+    }
+    
+    @Override
+    public int indexOf(int value) {
+        for (int i = head; i < tail; i++) {
+            if (data[i] == value) return i - head;
+        }
+        return -1;
+    }
+    
+    @Override
+    public int indexOf(int value, int start) {
+        if (start < 0 || start > size()) {
+            throw new IndexOutOfBoundsException();
+        }
+        for (int i = head + start; i < tail; i++) {
+            if (data[i] == value) {
+                return i - head;
+            }
+        }
+        return -1;
+    }
+    
+    @Override
+    public int lastIndexOf(int value) {
+        for (int i = tail - 1; i >= head; i--) {
+            if (data[i] == value) return i - head;
+        }
+        return -1;
+    }
+    
+    @Override
+    public int lastIndexOf(int value, int end) {
+        if (end < 0 || end > size()) {
+            throw new IndexOutOfBoundsException();
+        }
+        for (int i = head + end - 1; i >= head; i--) {
+            if (data[i] == value) {
+                return i - head;
+            }
+        }
+        return -1;
+    }
+    
+    @Override
+    public int binarySearch(int value) {
+        int[] array = toArray();
+        return Arrays.binarySearch(array, value);
+    }
+    
+    @Override
+    public int binarySearch(int fromIndex, int toIndex, int value) {
+        if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
 
+        // Create a temporary array for the specified range
+        int[] tempArray = new int[toIndex - fromIndex];
+        System.arraycopy(data, head + fromIndex, tempArray, 0, toIndex - fromIndex);
+
+        // Perform binary search on the temporary array
+        return Arrays.binarySearch(tempArray, value);
+    }
+    
+    //-------------------------------------------------------------------------
+    // Collection operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public boolean containsAll(int[] values) {
+        for (int value : values) {
+            if (!contains(value)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean containsAll(TIntCollection collection) {
+        TIntIterator iter = collection.iterator();
+        while (iter.hasNext()) {
+            if (!contains(iter.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean containsAll(Collection<?> collection) {
+        for (Object obj : collection) {
+            if (!(obj instanceof Integer) || !contains((Integer) obj)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     @Override
     public boolean retainAll(int[] values) {
         boolean modified = false;
@@ -729,7 +582,7 @@ public void add(int[] values) {
         }
         return modified;
     }
-
+    
     private boolean containsValue(int value, int[] values) {
         for (int v : values) {
             if (v == value) {
@@ -738,86 +591,289 @@ public void add(int[] values) {
         }
         return false;
     }
+    
+    @Override
+    public boolean retainAll(TIntCollection collection) {
+        boolean modified = false;
+        for (int i = head; i < tail; ) {
+            if (!collection.contains(data[i])) {
+                removeAt(i - head);
+                modified = true;
+            } else {
+                i++;
+            }
+        }
+        return modified;
+    }
+    
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+        throw new UnsupportedOperationException();
+    }
+    
+    //-------------------------------------------------------------------------
+    // Array operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public int[] toArray() {
+        int[] array = new int[size()];
+        System.arraycopy(data, head, array, 0, size());
+        return array;
+    }
+    
+    @Override
+    public int[] toArray(int[] dest) {
+        if (dest.length < size()) {
+            dest = new int[size()];
+        }
+        System.arraycopy(data, head, dest, 0, size());
+        return dest;
+    }
+    
+    @Override
+    public int[] toArray(int[] dest, int offset, int length) {
+        if (length > size()) {
+            throw new IllegalArgumentException("Length exceeds list size");
+        }
+        System.arraycopy(data, head, dest, offset, length);
+        return dest;
+    }
+    
+    @Override
+    public int[] toArray(int[] dest, int sourceOffset, int destOffset, int length) {
+        if (sourceOffset < 0 || destOffset < 0 || length < 0 ||
+            sourceOffset + length > size() || destOffset + length > dest.length) {
+            throw new IndexOutOfBoundsException();
+        }
 
-@Override
-public boolean retainAll(TIntCollection collection) {
-    boolean modified = false;
-    for (int i = head; i < tail; ) {
-        if (!collection.contains(data[i])) {
-            removeAt(i - head);
-            modified = true;
-        } else {
-            i++;
+        // Copy elements from the list to the destination array
+        System.arraycopy(data, head + sourceOffset, dest, destOffset, length);
+
+        // Return the destination array
+        return dest;
+    }
+    
+    @Override
+    public int[] toArray(int offset, int length) {
+        if (offset < 0 || length < 0 || offset + length > size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Create a new array for the specified range
+        int[] result = new int[length];
+        System.arraycopy(data, head + offset, result, 0, length);
+
+        return result;
+    }
+    
+    @Override
+    public void set(int offset, int[] values) {
+        if (offset < 0 || offset + values.length > size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Copy values from the provided array into the list
+        System.arraycopy(values, 0, data, head + offset, values.length);
+    }
+    
+    @Override
+    public void set(int offset, int[] values, int valuesOffset, int length) {
+        if (offset < 0 || valuesOffset < 0 || length < 0 ||
+            offset + length > size() || valuesOffset + length > values.length) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Copy values from the provided array into the list
+        System.arraycopy(values, valuesOffset, data, head + offset, length);
+    }
+    
+    //-------------------------------------------------------------------------
+    // Utility operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public int sum() {
+        int sum = 0;
+        for (int i = head; i < tail; i++) {
+            sum += data[i];
+        }
+        return sum;
+    }
+    
+    @Override
+    public int min() {
+        if (isEmpty()) throw new NoSuchElementException();
+        int min = data[head];
+        for (int i = head + 1; i < tail; i++) {
+            if (data[i] < min) min = data[i];
+        }
+        return min;
+    }
+    
+    @Override
+    public int max() {
+        if (isEmpty()) throw new NoSuchElementException();
+        int max = data[head];
+        for (int i = head + 1; i < tail; i++) {
+            if (data[i] > max) max = data[i];
+        }
+        return max;
+    }
+    
+    @Override
+    public void fill(int value) {
+        Arrays.fill(data, head, tail, value);
+    }
+    
+    @Override
+    public void fill(int fromIndex, int toIndex, int value) {
+        if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Fill the specified range with the value
+        Arrays.fill(data, head + fromIndex, head + toIndex, value);
+    }
+    
+    @Override
+    public void sort() {
+        Arrays.sort(data, head, tail);
+    }
+    
+    @Override
+    public void sort(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+        Arrays.sort(data, head + fromIndex, head + toIndex);
+    }
+    
+    @Override
+    public void reverse() {
+        for (int i = head, j = tail - 1; i < j; i++, j--) {
+            int temp = data[i];
+            data[i] = data[j];
+            data[j] = temp;
         }
     }
-    return modified;
-}
+    
+    @Override
+    public void reverse(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
 
-@Override
-public boolean addAll(int[] values) {
-    // Ensure there is enough capacity for the new elements
-    while (tail + values.length > capacity) {
-        resize();
-    }
-
-    // Copy values from the provided array into the list
-    System.arraycopy(values, 0, data, tail, values.length);
-
-    // Update the tail pointer
-    tail += values.length;
-
-    // Return true if the list was modified
-    return values.length > 0;
-}
-
-@Override
-public boolean containsAll(int[] values) {
-    for (int value : values) {
-        if (!contains(value)) {
-            return false;
+        // Reverse the specified range
+        for (int i = head + fromIndex, j = head + toIndex - 1; i < j; i++, j--) {
+            int temp = data[i];
+            data[i] = data[j];
+            data[j] = temp;
         }
     }
-    return true;
-}
-
-@Override
-public boolean addAll(TIntCollection collection) {
-    // Ensure there is enough capacity for the new elements
-    while (tail + collection.size() > capacity) {
-        resize();
-    }
-
-    // Copy values from the provided collection into the list
-    TIntIterator iterator = collection.iterator();
-    while (iterator.hasNext()) {
-        data[tail++] = iterator.next();
-    }
-
-    // Return true if the list was modified
-    return !collection.isEmpty();
-}
-
-@Override
-public boolean containsAll(TIntCollection collection) {
-    TIntIterator iter = collection.iterator();
-    while (iter.hasNext()) {
-        if (!contains(iter.next())) {
-            return false;
+    
+    @Override
+    public void shuffle(Random random) {
+        for (int i = tail - 1; i > head; i--) {
+            int j = head + random.nextInt(i - head + 1);
+            int temp = data[i];
+            data[i] = data[j];
+            data[j] = temp;
         }
     }
-    return true;
-}
-
-@Override
-public boolean containsAll(Collection<?> collection) {
-    for (Object obj : collection) {
-        if (!(obj instanceof Integer) || !contains((Integer) obj)) {
-            return false;
+    
+    @Override
+    public int replace(int oldValue, int newValue) {
+        int count = 0;
+        for (int i = head; i < tail; i++) {
+            if (data[i] == oldValue) {
+                data[i] = newValue;
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    @Override
+    public void transformValues(TIntFunction function) {
+        for (int i = head; i < tail; i++) {
+            data[i] = function.execute(data[i]);
         }
     }
-    return true;
-}
+    
+    //-------------------------------------------------------------------------
+    // Iteration operations
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public TIntIterator iterator() {
+        return new TIntIterator() {
+            private int current = head;
 
+            @Override
+            public boolean hasNext() {
+                return current < tail;
+            }
+
+            @Override
+            public int next() {
+                if (!hasNext()) throw new NoSuchElementException();
+                return data[current++];
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+    
+    @Override
+    public boolean forEach(TIntProcedure procedure) {
+        for (int i = head; i < tail; i++) {
+            if (!procedure.execute(data[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean forEachDescending(TIntProcedure procedure) {
+        for (int i = tail - 1; i >= head; i--) {
+            if (!procedure.execute(data[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    @Override
+    public TIntList grep(TIntProcedure procedure) {
+        ShiftToMiddleArray result = new ShiftToMiddleArray();
+        for (int i = head; i < tail; i++) {
+            if (procedure.execute(data[i])) {
+                result.add(data[i]);
+            }
+        }
+        return result;
+    }
+    
+    @Override
+    public TIntList inverseGrep(TIntProcedure procedure) {
+        ShiftToMiddleArray result = new ShiftToMiddleArray();
+        for (int i = head; i < tail; i++) {
+            if (!procedure.execute(data[i])) {
+                result.add(data[i]);
+            }
+        }
+        return result;
+    }
+    
+    //-------------------------------------------------------------------------
+    // Sublist operations
+    //-------------------------------------------------------------------------
+    
     @Override
     public TIntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex) {
@@ -827,7 +883,11 @@ public boolean containsAll(Collection<?> collection) {
         System.arraycopy(data, head + fromIndex, sublist.data, sublist.head, toIndex - fromIndex);
         sublist.tail = sublist.head + (toIndex - fromIndex);
         return sublist;
-    }	
-
     }
+    
+    @Override
+    public int getNoEntryValue() {
+        return NO_ENTRY_VALUE;
+    }
+}
 }
