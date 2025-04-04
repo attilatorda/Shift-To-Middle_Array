@@ -11,8 +11,6 @@
 #include "BenchmarkQueue.h"
 #include "BenchmarkList.h"
 
-using namespace std;
-
 void checkValidity() {
     ShiftToMiddleArray<int> stmArray;
     std::queue<int> m_queue;
