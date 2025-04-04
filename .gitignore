@@ -1,2 +1,6 @@
 *.class
 *.jar
+CMakeCache.txt
+CMakeLists.txt
+*.exe
+*.o
