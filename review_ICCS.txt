@@ -1,0 +1,139 @@
+Dear Attila Torda,
+
+Thank you for your submission to the International Conference on Computational Science (ICCS).
+Please read below for the decision on your paper.
+
+As always, submission to ICCS was very competitive. The program committee and conference chairs had to carefully select papers of the highest quality and relevance to the field of Computational Science.
+
+Unfortunately, your paper (see below) did not quite meet the level and relevance necessary for acceptance.
+
+385  Shift-To-Middle Array: A Novel Way To Implement Data Structures
+
+Please note that ICCS follows a "no-rebuttal" policy.
+Each paper is carefully reviewed by at least two experts in the field, and these reviews are then further evaluated by the ICCS Organizing Committee.
+
+We thank you for your interest in ICCS and encourage you to submit again next year.
+
+With best regards,
+The ICCS Organizing Committee
+
+SUBMISSION: 385
+TITLE: Shift-To-Middle Array: A Novel Way To Implement Data Structures
+
+
+----------------------- REVIEW 1 ---------------------
+SUBMISSION: 385
+TITLE: Shift-To-Middle Array: A Novel Way To Implement Data Structures
+AUTHORS: Attila Torda
+
+----------- Overall evaluation -----------
+SCORE: 1 (weak accept)
+----------- Reviewer's confidence -----------
+SCORE: 3 ((medium))
+----------- Relevance to ICCS -----------
+SCORE: 3 (fair)
+----------- Quality of abstract -----------
+SCORE: 4 (good)
+----------- Introduction and motivation -----------
+SCORE: 3 (fair)
+----------- Literature review and related work -----------
+SCORE:
+----------- Description & originality of the own contribution -----------
+SCORE: 3 (fair)
+----------- Results and presentation -----------
+SCORE: 4 (good)
+----------- Conclusions and future work -----------
+SCORE: 3 (fair)
+----------- Readability, quality of the English -----------
+SCORE: 3 (fair)
+----------- Quality of the figures -----------
+SCORE: 4 (good)
+----------- Conformance to the LNCS template -----------
+SCORE: 3 (fair)
+----------- Candidate for best paper -----------
+SCORE: 2 (No)
+----------- Candidate for special issue of Journal of Computational Science -----------
+SCORE: 2 (No)
+----------- Comments for the authors -----------
+The proposed Shift_To-Middle Array method has proven it merits and practicality by comparing to existing few techniques such ArrayLists and linked list. From the reported results, the proposed technique is reliable.
+
+
+
+----------------------- REVIEW 2 ---------------------
+SUBMISSION: 385
+TITLE: Shift-To-Middle Array: A Novel Way To Implement Data Structures
+AUTHORS: Attila Torda
+
+----------- Overall evaluation -----------
+SCORE: -2 (reject)
+----------- Reviewer's confidence -----------
+SCORE: 4 ((high))
+----------- Relevance to ICCS -----------
+SCORE: 4 (good)
+----------- Quality of abstract -----------
+SCORE: 3 (fair)
+----------- Introduction and motivation -----------
+SCORE:
+----------- Literature review and related work -----------
+SCORE:
+----------- Description & originality of the own contribution -----------
+SCORE:
+----------- Results and presentation -----------
+SCORE:
+----------- Conclusions and future work -----------
+SCORE:
+----------- Readability, quality of the English -----------
+SCORE:
+----------- Quality of the figures -----------
+SCORE:
+----------- Conformance to the LNCS template -----------
+SCORE:
+----------- Candidate for best paper -----------
+SCORE: 2 (No)
+----------- Candidate for special issue of Journal of Computational Science -----------
+SCORE: 2 (No)
+----------- Comments for the authors -----------
+This paper concerns a shift-to-middle array approach for
+data structures. The main issue with this paper is that
+some of the technical details are not given, thus it's
+difficult to see the novelty. Also, there are no simulation
+results, thus it's difficult to justify if the proposed
+approach can work efficiently in practice.
+
+
+
+----------------------- REVIEW 3 ---------------------
+SUBMISSION: 385
+TITLE: Shift-To-Middle Array: A Novel Way To Implement Data Structures
+AUTHORS: Attila Torda
+
+----------- Overall evaluation -----------
+SCORE: -2 (reject)
+----------- Reviewer's confidence -----------
+SCORE: 3 ((medium))
+----------- Relevance to ICCS -----------
+SCORE: 4 (good)
+----------- Quality of abstract -----------
+SCORE: 3 (fair)
+----------- Introduction and motivation -----------
+SCORE: 2 (poor)
+----------- Literature review and related work -----------
+SCORE: 1 (very poor)
+----------- Description & originality of the own contribution -----------
+SCORE: 3 (fair)
+----------- Results and presentation -----------
+SCORE: 3 (fair)
+----------- Conclusions and future work -----------
+SCORE: 3 (fair)
+----------- Readability, quality of the English -----------
+SCORE: 4 (good)
+----------- Quality of the figures -----------
+SCORE: 3 (fair)
+----------- Conformance to the LNCS template -----------
+SCORE: 4 (good)
+----------- Candidate for best paper -----------
+SCORE: 2 (No)
+----------- Candidate for special issue of Journal of Computational Science -----------
+SCORE: 2 (No)
+----------- Comments for the authors -----------
+The paper lacks any literature review. It is, therefore, impossible to evaluate how the work relates to the state of the art or advances it.
