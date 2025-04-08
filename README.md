@@ -64,11 +64,26 @@ java -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove
 For full benchmark details, check out the [publication](ShiftToMiddleArray.pdf). The provided **Python scripts** can be used to visualize performance metrics from CSV benchmark results.
 
 ## 🏛 History
-The **Shift-To-Middle Array** was developed as part of an effort to create a more efficient **implementation strategy for lists and deques**. Traditional data structures, such as `std::deque` and linked lists, suffer from **poor cache locality** or **fragmented memory allocations**, leading to inefficiencies. By leveraging **contiguous memory**, dynamic mid-shifting, and modern CPU optimizations, Shift-To-Middle Array provides a **balanced solution** for insertion, deletion, and access performance.
+The Shift-To-Middle Array was independently developed by Attila Torda as a personal project during free time, aiming to create a more efficient implementation strategy for lists and deques. This project explored whether a contiguous-memory approach with dynamic mid-shifting could offer better balance for insertions, deletions, and random access.
+
+- **Designed and implemented without academic/financial support, relying on open-source tools and iterative testing.**
+- **Initial results showed promise, with one ICCS 2024 reviewer noting the method’s "reliability" compared to ArrayLists/linked lists (Score: 4/5 on results presentation).**
+- **Areas for improvement identified: deeper benchmarking and formal literature review.**
 
 ## 📜 License
 This project is licensed under the MIT License.
 
+## 🙏 Acknowledgments
+
+This project benefited greatly from community feedback! Special thanks to:
+
+- **Hacker News** and **Reddit's r/algorithms** communities for their technical insights and suggestions that helped refine the core ideas.
+
+**Relevant discussions:**
+- [Hacker News thread on data structure efficiency](https://news.ycombinator.com/item?id=43456669)
+- [Reddit r/algorithms feedback discussion](https://www.reddit.com/r/algorithms/comments/1jix7zi/comment/mjtou49/?context=3)
+
+*The open exchange of ideas is what makes independent research so valuable — keep the conversations coming!*
 ## 🤝 Contributing
 Contributions are welcome! Feel free to open an issue or pull request.
 
