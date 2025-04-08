@@ -4,6 +4,18 @@
 #include <cstring>
 #include <memory>
 #include <stdexcept>
+#include <cassert>  // For assert()
+#include <type_traits> // For is_trivially_copyable
+
+// Configuration: Define STM_BOUNDS_CHECK to enable bounds checking
+// Comment this line out for unchecked (release) mode
+#define STM_BOUNDS_CHECK
+
+#ifdef STM_BOUNDS_CHECK
+  #define STM_ASSERT(cond, msg) assert((cond) && (msg))
+#else
+  #define STM_ASSERT(cond, msg) ((void)0)
+#endif
 
 template <typename T>
 class ShiftToMiddleArray {
@@ -57,43 +69,38 @@ public:
     bool empty() const { return head == tail; }
 
     T& operator[](int index) {
-        if (index < 0 || index >= size()) {
-            throw std::out_of_range("Index out of range");
-        }
+        STM_ASSERT(index >= 0 && index < size(), "Index out of range");
         return data[head + index];
     }
 
     const T& operator[](int index) const {
-        if (index < 0 || index >= size()) {
-            throw std::out_of_range("Index out of range");
-        }
+        STM_ASSERT(index >= 0 && index < size(), "Index out of range");
         return data[head + index];
     }
 
     T& front() {
-        if (empty()) throw std::out_of_range("Array is empty");
+        STM_ASSERT(!empty(), "Array is empty");
         return data[head];
     }
 
     const T& front() const {
-        if (empty()) throw std::out_of_range("Array is empty");
+        STM_ASSERT(!empty(), "Array is empty");
         return data[head];
     }
 
-	inline const T& get_head() const {
-		return front();  // Just calls your existing front() method
-	}
+    const T& get_head() const { return front(); }
 
     T& back() {
-        if (empty()) throw std::out_of_range("Array is empty");
+        STM_ASSERT(!empty(), "Array is empty");
         return data[tail - 1];
     }
 
     const T& back() const {
-        if (empty()) throw std::out_of_range("Array is empty");
+        STM_ASSERT(!empty(), "Array is empty");
         return data[tail - 1];
     }
 
+    // Modifiers
     void push_front(const T& value) {
         if (head == 0) resize();
         data[--head] = value;
