@@ -9,7 +9,7 @@
 
 // Configuration: Define STM_BOUNDS_CHECK to enable bounds checking
 // Comment this line out for unchecked (release) mode
-#define STM_BOUNDS_CHECK
+//#define STM_BOUNDS_CHECK
 
 #ifdef STM_BOUNDS_CHECK
   #define STM_ASSERT(cond, msg) assert((cond) && (msg))
@@ -21,14 +21,14 @@ template <typename T>
 class ShiftToMiddleArray {
 private:
     T* data;
-    int head, tail, capacity;
+    size_t  head, tail, capacity;
 
     void resize() {
-        int new_capacity = capacity ? capacity * 2 : 4;
+        size_t  new_capacity = capacity ? capacity * 2 : 4;
         T* new_data = static_cast<T*>(std::malloc(new_capacity * sizeof(T)));
         if (!new_data) throw std::bad_alloc();
 
-        int new_head = (new_capacity - (tail - head)) / 2;
+        size_t  new_head = (new_capacity - (tail - head)) / 2;
 		
 		if constexpr (std::is_trivially_copyable_v<T>) {
 			std::memcpy(new_data + new_head, data + head, (tail - head) * sizeof(T));
@@ -64,16 +64,16 @@ public:
     }
 
 
-    int size() const { return tail - head; }
+    size_t size() const { return tail - head; }
 
     bool empty() const { return head == tail; }
 
-    T& operator[](int index) {
+    T& operator[](size_t  index) {
         STM_ASSERT(index >= 0 && index < size(), "Index out of range");
         return data[head + index];
     }
 
-    const T& operator[](int index) const {
+    const T& operator[](size_t  index) const {
         STM_ASSERT(index >= 0 && index < size(), "Index out of range");
         return data[head + index];
     }
@@ -143,12 +143,12 @@ public:
         if (!empty()) --tail;
     }
 
-    void insert(int at, const T& value) {
+    void insert(size_t  at, const T& value) {
         if (at < head || at > tail) {
             throw std::out_of_range("Insert position out of range");
         }
 
-        int mid = (head + tail) / 2;
+        size_t  mid = (head + tail) / 2;
         if (at < mid) {
             if (head == 0) resize();
             --head;
@@ -163,7 +163,7 @@ public:
     }
 
     void shrink_to_fit() {
-        int new_capacity = size();
+        size_t new_capacity = size();
         T* new_data = static_cast<T*>(std::malloc(new_capacity * sizeof(T)));
         if (!new_data) throw std::bad_alloc();
 
