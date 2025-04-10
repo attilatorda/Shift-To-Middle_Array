@@ -17,19 +17,23 @@
   #define STM_ASSERT(cond, msg) ((void)0)
 #endif
 
-template <typename T>
+template <typename T, float ResizeMult = 2.0f>
 class ShiftToMiddleArray {
+
 private:
     T* data;
-    size_t  head, tail, capacity;
+    size_t  head, tail, capacity_;
+	float resize_multiplier;
 
     void resize() {
-        size_t  new_capacity = capacity ? capacity * 2 : 4;
+        size_t new_capacity = static_cast<size_t>(capacity_ * ResizeMult);
         T* new_data = static_cast<T*>(std::malloc(new_capacity * sizeof(T)));
+        
         if (!new_data) throw std::bad_alloc();
 
         size_t  new_head = (new_capacity - (tail - head)) / 2;
-		
+
+		//Copy data
 		if constexpr (std::is_trivially_copyable_v<T>) {
 			std::memcpy(new_data + new_head, data + head, (tail - head) * sizeof(T));
 		} else {
@@ -40,33 +44,96 @@ private:
         data = new_data;
         tail = new_head + (tail - head);
         head = new_head;
-        capacity = new_capacity;
+        capacity_ = new_capacity;
     }
 
 public:
-    // Default constructor - creates buffer with default capacity
     ShiftToMiddleArray() : ShiftToMiddleArray(8) {}
-    
-    // Constructor with specific capacity
+
     explicit ShiftToMiddleArray(size_t initial_capacity) 
-        : capacity(initial_capacity) 
+        : capacity_(initial_capacity) 
     {
-        data = static_cast<T*>(std::malloc(capacity * sizeof(T)));
-        head = tail = capacity / 2;  // Start in the middle
+        data = static_cast<T*>(std::malloc(capacity_ * sizeof(T)));
+        head = tail = capacity_ / 2;
         
         if (!data) {
             throw std::bad_alloc();
         }
     }
-    
-    ~ShiftToMiddleArray() { 
-        std::free(data); 
+
+    ~ShiftToMiddleArray() {
+        // Call destructors for initialized elements
+        for (size_t i = 0; i < size(); ++i) {
+            data[(head + i) % capacity_].~T();
+        }
+        std::free(data);
     }
 
+	// Copy constructor
+	ShiftToMiddleArray(const ShiftToMiddleArray& other)
+		: capacity_(other.capacity_),
+		  head(other.head),
+		  tail(other.tail)
+	{
+		if (other.capacity_ > 0) {
+			data = static_cast<T*>(std::malloc(other.capacity_ * sizeof(T)));
+			if (!data) throw std::bad_alloc();
+			
+			if constexpr (std::is_trivially_copyable_v<T>) {
+				std::memcpy(data, other.data, other.capacity_ * sizeof(T));
+			} else {
+				try {
+					std::uninitialized_copy(other.data + other.head, other.data + other.tail, data + head);
+				} catch (...) {
+					std::free(data);
+					throw;
+				}
+			}
+		} else {
+			data = nullptr;
+		}
+	}
 
-    size_t size() const { return tail - head; }
+	// Move constructor (noexcept)
+	ShiftToMiddleArray(ShiftToMiddleArray&& other) noexcept
+		: data(other.data),
+		  head(other.head),
+		  tail(other.tail),
+		  capacity_(other.capacity_)
+	{
+		other.data = nullptr;
+		other.head = other.tail = other.capacity_ = 0;
+	}
 
-    bool empty() const { return head == tail; }
+	// Copy assignment (strong exception safety)
+	ShiftToMiddleArray& operator=(const ShiftToMiddleArray& other) {
+		if (this != &other) {
+			ShiftToMiddleArray temp(other);  // Use copy constructor
+			swap(*this, temp);              // Swap with temporary
+		}
+		return *this;
+	}
+
+	// Move assignment (noexcept)
+	ShiftToMiddleArray& operator=(ShiftToMiddleArray&& other) noexcept {
+		swap(*this, other);
+		return *this;
+	}
+
+	// Swap function (noexcept)
+	friend void swap(ShiftToMiddleArray& a, ShiftToMiddleArray& b) noexcept {
+		using std::swap;
+		swap(a.data, b.data);
+		swap(a.head, b.head);
+		swap(a.tail, b.tail);
+		swap(a.capacity_, b.capacity_);
+	}
+
+    size_t size() const noexcept { return tail - head; }
+    bool empty() const noexcept { return head == tail; }
+    size_t capacity() const noexcept { return capacity_; }
+
+	// Accessors
 
     T& operator[](size_t  index) {
         STM_ASSERT(index >= 0 && index < size(), "Index out of range");
@@ -101,37 +168,38 @@ public:
     }
 
     // Modifiers
+	
     void push_front(const T& value) {
         if (head == 0) resize();
         data[--head] = value;
     }
 
     void push_back(const T& value) {
-        if (tail == capacity) resize();
+        if (tail == capacity_) resize();
         data[tail++] = value;
     }
 
-    inline void push(const T& value) {
+    void push(const T& value) {
         push_back(value);
     }
 
-    inline void insert_tail(const T& value) {
+    void insert_tail(const T& value) {
         push_back(value);
     }
 
-	inline void pop_front() {
+	void pop_front() {
 		remove_head();
 	}
 
-	inline void pop_back() {
+	void pop_back() {
 		remove_tail();
 	}
 
-    inline void pop(const T& value) {
+    void pop(const T& value) {
         pop_back(value);
     }
 	
-    inline void pop() {
+    void pop() {
         remove_head();
     }	
 
@@ -155,12 +223,14 @@ public:
             std::memmove(data + head, data + head + 1, (at - head) * sizeof(T));
             data[at] = value;
         } else {
-            if (tail == capacity) resize();
+            if (tail == capacity_) resize();
             std::memmove(data + at + 1, data + at, (tail - at) * sizeof(T));
             data[at] = value;
             ++tail;
         }
     }
+
+	// Helpers
 
     void shrink_to_fit() {
         size_t new_capacity = size();
@@ -172,6 +242,6 @@ public:
         data = new_data;
         tail -= head;
         head = 0;
-        capacity = new_capacity;
+        capacity_ = new_capacity;
     }
 };
