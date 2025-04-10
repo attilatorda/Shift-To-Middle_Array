@@ -72,8 +72,7 @@ The Shift-To-Middle Array was independently developed by Attila Torda as a perso
 
 ## 📜 License
 
-This project is licensed under the AGPLv3 License. See the [LICENSE](LICENSE) file for details.
-I'm open for consultations and selling the source code under other licenses. Please contact me on my [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/)!
+This project is distributed under the terms of the AGPLv3 License. The full license text can be found in the  [LICENSE](LICENSE) file. For companies requiring a commercial license with different terms than the AGPLv3, I offer a perpetual license for a single payment of 50 euros per company, allowing internal use without resale rights. Please reach out to me on [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/) to inquire about purchasing.
 
 ## 🙏 Acknowledgments
 
