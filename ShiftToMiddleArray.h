@@ -26,7 +26,13 @@ private:
 	float resize_multiplier;
 
     void resize() {
-        size_t new_capacity = static_cast<size_t>(capacity_ * ResizeMult);
+		
+		if (size() > 2 && size() <  capacity_ / 2) {
+			shift_to_middle();
+			return;
+		}				
+		
+        size_t new_capacity = static_cast<size_t>(capacity_ * ResizeMult);		
         T* new_data = static_cast<T*>(std::malloc(new_capacity * sizeof(T)));
         
         if (!new_data) throw std::bad_alloc();
@@ -46,6 +52,45 @@ private:
         head = new_head;
         capacity_ = new_capacity;
     }
+		
+	void shift_to_middle() {
+		size_t current_size = size(); // Calculate size *before* modifications
+		size_t ideal_head;
+
+		ideal_head = (capacity_ > current_size) ? (capacity_ - current_size) / 2 : 0;
+		ideal_head = std::clamp(ideal_head, size_t(0), (capacity_ >= current_size) ? capacity_ - current_size : 0);
+		
+		if (head == ideal_head) return; // Already centered
+
+		T* source_begin = data + head;
+		T* source_end = data + tail;
+		T* dest_begin = data + ideal_head; // Target start address for the block
+
+		if constexpr (std::is_trivially_copyable_v<T>) {
+			// Trivial types: memmove is safe and efficient for overlap
+			std::memmove(dest_begin, source_begin, current_size * sizeof(T));
+		} else {
+			// Non-trivial types: Use std::move or std::move_backward
+			if (ideal_head < head) { // Shifting left: Moving data to an earlier memory address
+				// Use std::move: Copies [source_begin, source_end) to [dest_begin, ...)
+				std::move(source_begin, source_end, dest_begin);
+				// Destroy the objects left behind at the *end* of the original range
+				// Range is [dest_begin + current_size, source_end)
+				destroy_range(dest_begin + current_size, source_end);
+			} else { // Shifting right: Moving data to a later memory address
+				// Use std::move_backward: Copies [source_begin, source_end) to range ending at dest_begin + current_size
+				std::move_backward(source_begin, source_end, dest_begin + current_size);
+				// Destroy the objects left behind at the *beginning* of the original range
+				// Range is [source_begin, dest_begin)
+				destroy_range(source_begin, dest_begin);
+			}
+		}
+
+		// Update indices safely using pre-calculated size
+		head = ideal_head;
+		tail = head + current_size; // Use current_size calculated before the shift
+		return; // Indicate that a shift occurred
+	}
 
 public:
     ShiftToMiddleArray() : ShiftToMiddleArray(8) {}
