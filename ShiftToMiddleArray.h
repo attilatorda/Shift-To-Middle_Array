@@ -1,15 +1,18 @@
 #pragma once
 
-#include <cstdlib>
-#include <cstring>
-#include <memory>
-#include <stdexcept>
-#include <cassert>  // For assert()
-#include <type_traits> // For is_trivially_copyable
+#include <cstdlib>      // std::malloc, std::free, std::size_t
+#include <cstring>      // std::memcpy, std::memmove
+#include <memory>       // std::uninitialized_copy, std::uninitialized_move, std::addressof
+#include <stdexcept>    // std::out_of_range, std::bad_alloc, std::logic_error
+#include <cassert>      // assert()
+#include <type_traits>  // std::is_trivially_copyable_v, etc.
+#include <algorithm>    // std::max, std::min, std::clamp, std::move, std::move_backward, std::swap
+#include <utility>      // std::swap (used via <algorithm>), std::forward
+#include <iterator>     // std::random_access_iterator_tag, std::ptrdiff_t, std::reverse_iterator
+#include <ostream>      // std::ostream, std::istream
 
-// Configuration: Define STM_BOUNDS_CHECK to enable bounds checking
-// Comment this line out for unchecked (release) mode
-//#define STM_BOUNDS_CHECK
+//#define ALLOW_SHRINKING  // Toggle dynamic downsizing
+#define STM_BOUNDS_CHECK  // Toggle this for bounds checking
 
 #ifdef STM_BOUNDS_CHECK
   #define STM_ASSERT(cond, msg) assert((cond) && (msg))
@@ -25,14 +28,33 @@ private:
     size_t  head, tail, capacity_;
 	float resize_multiplier;
 
-    void resize() {
+    void resize_if_needed() {
+		
+		size_t new_capacity;
+		
+		#ifdef ALLOW_SHRINKING
+		if (size() < capacity_ / 8 && capacity_ > 4) {  
+			new_capacity = std::max({
+				size() * 2,
+				static_cast<size_t>(4),
+			});
+		}
+		else
+		#endif
 		
 		if (size() > 2 && size() <  capacity_ / 2) {
 			shift_to_middle();
 			return;
-		}				
+		}
 		
-        size_t new_capacity = static_cast<size_t>(capacity_ * ResizeMult);		
+		else {
+			new_capacity = static_cast<size_t>(capacity_ * ResizeMult);		
+		}
+		
+		resize(new_capacity);		
+    }
+	
+	void resize(size_t new_capacity) {
         T* new_data = static_cast<T*>(std::malloc(new_capacity * sizeof(T)));
         
         if (!new_data) throw std::bad_alloc();
@@ -50,8 +72,19 @@ private:
         data = new_data;
         tail = new_head + (tail - head);
         head = new_head;
-        capacity_ = new_capacity;
-    }
+        capacity_ = new_capacity;		
+	}
+	
+	#ifdef ALLOW_SHRINKING
+	void shrink_if_needed() {
+		if(size() < capacity_ / 8 && capacity_ > 4) {
+			resize(std::max({
+				size() * 2,
+				static_cast<size_t>(4),
+			}));
+		}
+	}
+	#endif
 		
 	void shift_to_middle() {
 		size_t current_size = size(); // Calculate size *before* modifications
@@ -215,12 +248,12 @@ public:
     // Modifiers
 	
     void push_front(const T& value) {
-        if (head == 0) resize();
+        if (head == 0) resize_if_needed();
         data[--head] = value;
     }
 
     void push_back(const T& value) {
-        if (tail == capacity_) resize();
+        if (tail == capacity_) resize_if_needed();
         data[tail++] = value;
     }
 
@@ -250,10 +283,16 @@ public:
 
     void remove_head() {
         if (!empty()) ++head;
+		#ifdef ALLOW_SHRINKING
+		shrink_if_needed();
+		#endif		
     }
 
     void remove_tail() {
         if (!empty()) --tail;
+		#ifdef ALLOW_SHRINKING
+		shrink_if_needed();
+		#endif		
     }
 
     void insert(size_t  at, const T& value) {
@@ -263,17 +302,58 @@ public:
 
         size_t  mid = (head + tail) / 2;
         if (at < mid) {
-            if (head == 0) resize();
+            if (head == 0) resize_if_needed();
             --head;
             std::memmove(data + head, data + head + 1, (at - head) * sizeof(T));
             data[at] = value;
         } else {
-            if (tail == capacity_) resize();
+            if (tail == capacity_) resize_if_needed();
             std::memmove(data + at + 1, data + at, (tail - at) * sizeof(T));
             data[at] = value;
             ++tail;
         }
     }
+
+	void delete_at(size_t index) {
+		STM_ASSERT(index < size(), "ShiftToMiddleArray::delete_at - index " + std::to_string(index) + 
+			" out of range (size=" + std::to_string(size()) + ")");
+		
+		size_t absolute_pos = head + index;
+		bool closer_to_head = (index < size() / 2);
+		
+		// Destroy target element
+		if constexpr (!std::is_trivially_destructible_v<T>) {
+			data[absolute_pos].~T();
+		}
+		
+		// Shift elements (direction-aware)
+		if (closer_to_head) {
+			if constexpr (std::is_trivially_copyable_v<T>) {
+				std::memmove(data + head + 1, data + head, index * sizeof(T));
+			} else {
+				for (size_t i = absolute_pos; i > head; --i) {
+					new (&data[i]) T(std::move(data[i - 1]));
+					data[i - 1].~T();
+				}
+			}
+			++head;
+		} else {
+			if constexpr (std::is_trivially_copyable_v<T>) {
+				std::memmove(data + absolute_pos, data + absolute_pos + 1, 
+							(tail - absolute_pos - 1) * sizeof(T));
+			} else {
+				for (size_t i = absolute_pos; i < tail - 1; ++i) {
+					new (&data[i]) T(std::move(data[i + 1]));
+					data[i + 1].~T();
+				}
+			}
+			--tail;
+		}
+		
+		#ifdef ALLOW_SHRINKING
+		shrink_if_needed();
+		#endif
+	}
 
 	// Helpers
 
