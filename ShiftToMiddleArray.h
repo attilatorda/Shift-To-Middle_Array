@@ -25,7 +25,7 @@ class ShiftToMiddleArray {
 
 private:
     T* data;
-    size_t  head, tail, capacity_;
+    size_t head, tail, capacity_;
 	float resize_multiplier;
 
     void resize_if_needed() {
@@ -355,7 +355,40 @@ public:
 		#endif
 	}
 
-	// Helpers
+    // Iterator System
+	
+    template <bool Const>
+    class IteratorBase {
+        using ptr_t = std::conditional_t<Const, const T*, T*>;
+        ptr_t ptr;
+    public:
+        explicit IteratorBase(ptr_t p) : ptr(p) {}
+        using reference = std::conditional_t<Const, const T&, T&>;
+        
+        reference operator*() const { return *ptr; }
+        IteratorBase& operator++() { ++ptr; return *this; }
+        IteratorBase operator++(int) { auto tmp = *this; ++ptr; return tmp; }
+        bool operator!=(const IteratorBase& other) const { return ptr != other.ptr; }
+    };
+
+    using iterator = IteratorBase<false>;
+    using const_iterator = IteratorBase<true>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    iterator begin() { return iterator(data + head); }
+    iterator end()   { return iterator(data + tail); }
+    const_iterator begin() const { return const_iterator(data + head); }
+    const_iterator end() const   { return const_iterator(data + tail); }
+    const_iterator cbegin() const { return begin(); }
+    const_iterator cend() const   { return end(); }
+
+    reverse_iterator rbegin() { return reverse_iterator(end()); }
+    reverse_iterator rend()   { return reverse_iterator(begin()); }
+    const_reverse_iterator crbegin() const { return const_reverse_iterator(cend()); }
+    const_reverse_iterator crend() const   { return const_reverse_iterator(cbegin()); }
+
+	// Other methods
 
     void shrink_to_fit() {
         size_t new_capacity = size();
@@ -369,4 +402,16 @@ public:
         head = 0;
         capacity_ = new_capacity;
     }
+
+	void serialize(std::ostream& os) const {
+		os.write(reinterpret_cast<const char*>(&head), sizeof(size_t));
+		os.write(reinterpret_cast<const char*>(data + head), size() * sizeof(T));
+	}
+
 };
+
+// Non-member swap specialization
+template<typename T>
+void swap(ShiftToMiddleArray<T>& lhs, ShiftToMiddleArray<T>& rhs) noexcept {
+    lhs.swap(rhs);
+}
