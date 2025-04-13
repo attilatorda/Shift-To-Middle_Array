@@ -67,7 +67,7 @@ For full benchmark details, check out the [publication](ShiftToMiddleArray.pdf).
 The Shift-To-Middle Array was independently developed by Attila Torda as a personal project during free time, aiming to create a more efficient implementation strategy for lists and deques. This project explored whether a contiguous-memory approach with dynamic mid-shifting could offer better balance for insertions, deletions, and random access.
 
 - **Designed and implemented without academic/financial support, relying on open-source tools and iterative testing.**
-- **Initial results showed promise, with one ICCS 2024 reviewer noting the method’s "reliability" compared to ArrayLists/linked lists (Score: 4/5 on results presentation).**
+- **Initial results showed promise, with one ICCS 2025 reviewer noting the method’s "reliability" compared to ArrayLists/linked lists (Score: 4/5 on results presentation).**
 - **Areas for improvement identified: deeper benchmarking and formal literature review.**
 
 ## 📜 License
