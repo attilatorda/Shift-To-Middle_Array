@@ -116,42 +116,25 @@ private:
 	#endif
 		
 	void shift_to_middle() {
-		size_t current_size = size(); // Calculate size *before* modifications
-		size_t ideal_head;
-
-		ideal_head = (capacity_ > current_size) ? (capacity_ - current_size) / 2 : 0;
-		ideal_head = std::clamp(ideal_head, size_t(0), (capacity_ >= current_size) ? capacity_ - current_size : 0);
 		
-		if (head == ideal_head) return; // Already centered
+		const size_t current_size = size();
+		if (current_size == 0 || head == (capacity_ - current_size) / 2) return;
 
-		T* source_begin = data + head;
-		T* source_end = data + tail;
-		T* dest_begin = data + ideal_head; // Target start address for the block
+		T* new_head = data + (capacity_ - current_size) / 2;
 
 		if constexpr (std::is_trivially_copyable_v<T>) {
-			// Trivial types: memmove is safe and efficient for overlap
-			std::memmove(dest_begin, source_begin, current_size * sizeof(T));
+			std::memmove(new_head, data + head, current_size * sizeof(T));
 		} else {
-			// Non-trivial types: Use std::move or std::move_backward
-			if (ideal_head < head) { // Shifting left: Moving data to an earlier memory address
-				// Use std::move: Copies [source_begin, source_end) to [dest_begin, ...)
-				std::move(source_begin, source_end, dest_begin);
-				// Destroy the objects left behind at the *end* of the original range
-				// Range is [dest_begin + current_size, source_end)
-				destroy_range(dest_begin + current_size, source_end);
-			} else { // Shifting right: Moving data to a later memory address
-				// Use std::move_backward: Copies [source_begin, source_end) to range ending at dest_begin + current_size
-				std::move_backward(source_begin, source_end, dest_begin + current_size);
-				// Destroy the objects left behind at the *beginning* of the original range
-				// Range is [source_begin, dest_begin)
-				destroy_range(source_begin, dest_begin);
+			if (new_head < data + head) {  // Shift left
+				std::move(data + head, data + tail, new_head);
+				for (T* p = new_head + current_size; p < data + tail; ++p) p->~T();
+			} else {  // Shift right
+				std::move_backward(data + head, data + tail, new_head + current_size);
+				for (T* p = data + head; p < new_head; ++p) p->~T();
 			}
 		}
 
-		// Update indices safely using pre-calculated size
-		head = ideal_head;
-		tail = head + current_size; // Use current_size calculated before the shift
-		return; // Indicate that a shift occurred
+		tail = (head = new_head - data) + current_size;
 	}
 
 public:
