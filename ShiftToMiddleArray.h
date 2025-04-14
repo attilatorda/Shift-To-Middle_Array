@@ -11,6 +11,7 @@
 #include <iterator>     // std::random_access_iterator_tag, std::ptrdiff_t, std::reverse_iterator
 #include <ostream>      // std::ostream, std::istream
 
+#define BIAS_MULT 0.05f  // Toggle adaptive midpoint
 //#define ALLOW_SHRINKING  // Toggle dynamic downsizing
 #define STM_BOUNDS_CHECK  // Toggle this for bounds checking
 
@@ -27,22 +28,25 @@ private:
     T* data;
     size_t head, tail, capacity_;
 	float resize_multiplier;
+#ifdef BIAS_MULT
+	float bias;
+#endif
 
     void resize_if_needed() {
 		
 		size_t new_capacity;
 		
-		#ifdef ALLOW_SHRINKING
-		if (size() < capacity_ / 8 && capacity_ > 4) {  
+#ifdef ALLOW_SHRINKING
+		if (size()  < capacity_ / 8 && capacity_ > 4) {  
 			new_capacity = std::max({
-				size() * 2,
+				size()  * 2,
 				static_cast<size_t>(4),
 			});
 		}
 		else
-		#endif
+#endif
 		
-		if (size() > 2 && size() <  capacity_ / 2) {
+		if (size()  > 2 && size() <  capacity_ / 2) {
 			shift_to_middle();
 			return;
 		}
@@ -59,8 +63,33 @@ private:
         
         if (!new_data) throw std::bad_alloc();
 
-        size_t  new_head = (new_capacity - (tail - head)) / 2;
+        size_t new_head = (new_capacity - (tail - head)) / 2;
 
+#ifdef BIAS_MULT
+		// Apply dynamic biasing
+		bool bias_is_negative = (bias < 0.0f);
+		float abs_bias = std::abs(bias);
+		size_t bias_offset = static_cast<size_t>(abs_bias * static_cast<double>(new_capacity));
+
+		if (bias_is_negative) {
+			// Handle negative bias: shift left
+			if (bias_offset > new_head) {
+				new_head = 0;
+				bias += BIAS_MULT;
+			} else {
+				new_head -= bias_offset;
+			}
+		} else {
+			// Handle non-negative bias: shift right
+			if (new_head + size()  + bias_offset > new_capacity) {
+				new_head = new_capacity - size() ;
+				bias -= BIAS_MULT;
+			} else {
+				new_head += bias_offset;
+			}
+		}
+#endif
+		
 		//Copy data
 		if constexpr (std::is_trivially_copyable_v<T>) {
 			std::memcpy(new_data + new_head, data + head, (tail - head) * sizeof(T));
@@ -131,8 +160,16 @@ public:
     explicit ShiftToMiddleArray(size_t initial_capacity) 
         : capacity_(initial_capacity) 
     {
+		if (initial_capacity == 0) {
+			// throw std::invalid_argument("Initial capacity cannot be zero.");
+			capacity_ = 1;
+		}
+
         data = static_cast<T*>(std::malloc(capacity_ * sizeof(T)));
         head = tail = capacity_ / 2;
+#ifdef BIAS_MULT	
+		bias = 0.0f;
+#endif
         
         if (!data) {
             throw std::bad_alloc();
@@ -149,9 +186,12 @@ public:
 
 	// Copy constructor
 	ShiftToMiddleArray(const ShiftToMiddleArray& other)
-		: capacity_(other.capacity_),
-		  head(other.head),
-		  tail(other.tail)
+		:  head(other.head),
+		  tail(other.tail),
+		  capacity_(other.capacity_)
+#ifdef BIAS_MULT
+		  ,bias(other.bias)
+#endif		  
 	{
 		if (other.capacity_ > 0) {
 			data = static_cast<T*>(std::malloc(other.capacity_ * sizeof(T)));
@@ -178,6 +218,9 @@ public:
 		  head(other.head),
 		  tail(other.tail),
 		  capacity_(other.capacity_)
+#ifdef BIAS_MULT
+		  ,bias(other.bias)
+#endif		  		  
 	{
 		other.data = nullptr;
 		other.head = other.tail = other.capacity_ = 0;
@@ -205,6 +248,9 @@ public:
 		swap(a.head, b.head);
 		swap(a.tail, b.tail);
 		swap(a.capacity_, b.capacity_);
+#ifdef BIAS_MULT	
+		swap(a.bias, b.bias);
+#endif
 	}
 
     size_t size() const noexcept { return tail - head; }
@@ -248,12 +294,22 @@ public:
     // Modifiers
 	
     void push_front(const T& value) {
-        if (head == 0) resize_if_needed();
+        if (head == 0) {
+#ifdef BIAS_MULT				
+			bias += BIAS_MULT;
+#endif
+			resize_if_needed();
+		}
         data[--head] = value;
     }
 
     void push_back(const T& value) {
-        if (tail == capacity_) resize_if_needed();
+        if (tail == capacity_) {
+#ifdef BIAS_MULT				
+			bias -= BIAS_MULT;
+#endif
+			resize_if_needed();
+		}
         data[tail++] = value;
     }
 
