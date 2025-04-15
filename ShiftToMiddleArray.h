@@ -159,15 +159,15 @@ public:
         }
     }
 
+    // Rule of Five
+
     ~ShiftToMiddleArray() {
-        // Call destructors for initialized elements
         for (size_t i = 0; i < size(); ++i) {
             data[(head + i) % capacity_].~T();
         }
         std::free(data);
     }
 
-	// Copy constructor
 	ShiftToMiddleArray(const ShiftToMiddleArray& other)
 		:  head(other.head),
 		  tail(other.tail),
@@ -195,7 +195,6 @@ public:
 		}
 	}
 
-	// Move constructor (noexcept)
 	ShiftToMiddleArray(ShiftToMiddleArray&& other) noexcept
 		: data(other.data),
 		  head(other.head),
@@ -209,7 +208,6 @@ public:
 		other.head = other.tail = other.capacity_ = 0;
 	}
 
-	// Copy assignment (strong exception safety)
 	ShiftToMiddleArray& operator=(const ShiftToMiddleArray& other) {
 		if (this != &other) {
 			ShiftToMiddleArray temp(other);  // Use copy constructor
@@ -218,13 +216,25 @@ public:
 		return *this;
 	}
 
-	// Move assignment (noexcept)
 	ShiftToMiddleArray& operator=(ShiftToMiddleArray&& other) noexcept {
 		swap(*this, other);
 		return *this;
 	}
 
-	// Swap function (noexcept)
+	bool operator==(const ShiftToMiddleArray& other) const {
+		// Quick checks: size and capacity (if needed)
+		if (size() != other.size()) return false;
+		if (empty() && other.empty()) return true; // Both empty
+
+		// Compare each element in the active range [head, tail)
+		for (size_t i = 0; i < size(); ++i) {
+			if (data[head + i] != other.data[other.head + i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	friend void swap(ShiftToMiddleArray& a, ShiftToMiddleArray& b) noexcept {
 		using std::swap;
 		swap(a.data, b.data);
@@ -235,6 +245,8 @@ public:
 		swap(a.bias, b.bias);
 #endif
 	}
+	
+	// Capacity observers
 
     size_t size() const noexcept { return tail - head; }
     bool empty() const noexcept { return head == tail; }
@@ -322,16 +334,16 @@ public:
 
     void remove_head() {
         if (!empty()) ++head;
-		#ifdef ALLOW_SHRINKING
+#ifdef ALLOW_SHRINKING
 		shrink_if_needed();
-		#endif		
+#endif		
     }
 
     void remove_tail() {
         if (!empty()) --tail;
-		#ifdef ALLOW_SHRINKING
+#ifdef ALLOW_SHRINKING
 		shrink_if_needed();
-		#endif		
+#endif		
     }
 
     void insert(size_t  at, const T& value) {
@@ -389,9 +401,9 @@ public:
 			--tail;
 		}
 		
-		#ifdef ALLOW_SHRINKING
+#ifdef ALLOW_SHRINKING
 		shrink_if_needed();
-		#endif
+#endif
 	}
 
     // Iterator System
@@ -444,12 +456,35 @@ public:
 
 	void serialize(std::ostream& os) const {
 		os.write(reinterpret_cast<const char*>(&head), sizeof(size_t));
-		os.write(reinterpret_cast<const char*>(data + head), size() * sizeof(T));
+		size_t current_size = size(); // Store size to avoid recalculating
+		os.write(reinterpret_cast<const char*>(&current_size), sizeof(size_t));
+		os.write(reinterpret_cast<const char*>(data + head), current_size * sizeof(T));
 	}
 
+	bool deserialize(std::istream& is) {
+		// Read head (starting index)
+		if (!is.read(reinterpret_cast<char*>(&head), sizeof(size_t))) {
+			return false;
+		}
+
+		// Read tail (end index) or size to reconstruct tail
+		size_t serialized_size;
+		if (!is.read(reinterpret_cast<char*>(&serialized_size), sizeof(size_t))) {
+			return false;
+		}
+
+		// Read data into buffer
+		is.read(reinterpret_cast<char*>(data + head), serialized_size * sizeof(T));
+		if (is.fail()) {
+			return false;
+		}
+
+		// Reconstruct tail
+		tail = head + serialized_size;
+		return true;
+	}
 };
 
-// Non-member swap specialization
 template<typename T>
 void swap(ShiftToMiddleArray<T>& lhs, ShiftToMiddleArray<T>& rhs) noexcept {
     lhs.swap(rhs);
