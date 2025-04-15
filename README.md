@@ -76,19 +76,22 @@ After the publication I implemented the **bias** feature. I plan to make more te
 
 ## ❓ FAQ
 
--Is this just a ring buffer? <br>
+**Is this just a ring buffer?** <br>
 No — a ring buffer is a fixed-size circular structure that wraps around when full. The Shift-To-Middle Array is dynamically resizable and allows both ends to grow without wrapping. Unlike ring buffers, it can handle arbitrary growth while maintaining amortized O(1) operations and fast random access.
 
--Why not resize with an asymmetric buffer if most operations are push_front or push_back? <br>
+**Did you reinvent the array-based deque?** <br>
+In spirit, yes — but with a different approach. Originally, the Shift-To-Middle Array was designed as an alternative to list implementations, providing better memory efficiency and cache locality. Later, it evolved to handle both queues and deque operations, and with the addition of the bias feature, it dynamically optimizes the allocation based on usage patterns.
+
+**Why not resize with an asymmetric buffer if most operations are push_front or push_back?** <br>
 You can! The Shift-To-Middle Array supports dynamic biasing via a bias parameter. When enabled (with #define BIAS_MULT), the buffer adjusts headroom during resizing based on recent usage patterns — giving more space to the side you're actively pushing to. It's automatic and tunable.
 
--Is this better than std::deque? <br>
+**Is this better than std::deque?** <br>
 For many cases, yes: <br>
 ✅Contiguous memory improves cache performance. <br>
 ✅No fragmentation simplifies allocator usage. <br>
 ✅Easier SIMD and memory-aligned optimizations.
 
--Will this ever be in the STL? <br>
+**Will this ever be in the STL?** <br>
 Unlikely — the STL already has std::deque, std::vector, std::list, etc., and avoids redundancy. But this structure could live in performance-focused libraries or game engines where custom memory layouts matter.
 
 ## 📜 License
