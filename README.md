@@ -93,6 +93,17 @@ Unlikely — the STL already has std::deque, std::vector, std::list, etc., and a
 **Did you use AI?** <br>
 Yes, I did! However, all the AI Chatbots I used kept making mistakes, especially when my source file got big, so I had to carefully review each modification.
 
+## 🔄 Variations
+
+**Fixed-Size Implementation** <br>
+A simple, memory-efficient version where the array has a predefined maximum capacity.
+
+**Unrolled Shift-to-Middle Array** <br>
+A hybrid between an unrolled linked list and a shift-to-middle (STM) array, balancing cache efficiency and dynamic operations.
+
+**Probabilistic Version** <br>
+For scenarios favoring speed over strict correctness, this variant introduces probabilistic techniques (e.g., Bloom filters or count-min sketches) to approximate queries. It trades exactness for O(1) lookups and reduced memory usage, ideal for applications like caching, network routing, or streaming algorithms where occasional false positives/negatives are acceptable.
+
 ## 📜 License
 
 This project is distributed under the terms of the AGPLv3 License. The full license text can be found in the  [LICENSE](LICENSE) file. For companies requiring a commercial license with different terms than the AGPLv3, I offer a perpetual license for a single payment of 50 euros per company, allowing internal use without resale rights. Please reach out to me on [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/) to inquire about purchasing.
