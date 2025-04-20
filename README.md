@@ -49,12 +49,12 @@ javac -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove.java
 java -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove
 ```
 
-## 🔬 When To Use
+## 🔬 Possible Applications
 
-- **High-performance queue structures**
+- **Embedded systems**
 - **Game engines & real-time applications**
-- **Networking (packet buffering, event queues)**
-- **Dynamic sequences in computational geometry & physics**
+- **Backend Frameworks**
+- **Scientific Computing**
 
 ## 📊 Benchmarks & Results
 
