@@ -75,8 +75,17 @@ After the publication I implemented the **bias** feature. I plan to make more te
 **Is this just a ring buffer?** <br>
 No — a ring buffer is a fixed-size circular structure that wraps around when full. The Shift-To-Middle Array is dynamically resizable and allows both ends to grow without wrapping. Unlike ring buffers, it can handle arbitrary growth while maintaining amortized O(1) operations and fast random access.
 
-**Did you reinvent the array-based deque?** <br>
-In spirit, yes — but with a different approach. Originally, the Shift-To-Middle Array was designed as an alternative to list implementations, providing better memory efficiency and cache locality. Later, it evolved to handle both queues and deque operations, and with the addition of the bias feature, it dynamically optimizes the allocation based on usage patterns.
+**Did you reinvent the array-based deque?**
+
+No. The Shift-to-Middle (STM) Array is an implementation strategy that can be used for various data structures, including lists, queues, and deques. While both STM arrays and traditional array deques use array-backed storage, they optimize for fundamentally different operations and access patterns.
+
+A traditional array deque is optimized for operations at its ends (head and tail), providing O(1) performance for adding or removing elements there. However, inserting or deleting elements in the middle requires shifting a large number of elements, resulting in O(n) time complexity.
+
+In contrast, the STM Array also provides O(1) performance at the ends but achieves amortized O(1) performance even for insertions and deletions in the middle through its unique shift-to-middle approach.
+
+The key innovation is the bias system, which allows the STM Array structure to dynamically optimize its internal memory layout based on observed usage patterns – something traditional array deques cannot do. Where an array deque is fixed in its end-optimized behavior, the STM Array automatically adapts to whether the application performs mostly front, middle, or back operations.
+
+This makes the STM Array strictly more versatile. It can efficiently handle all the queue and deque use cases typical of an array deque, while also supporting efficient list-like operations in the middle that would be prohibitively expensive with a traditional array deque.
 
 **Why not resize with an asymmetric buffer if most operations are push_front or push_back?** <br>
 You can! The Shift-To-Middle Array supports dynamic biasing via a bias parameter. When enabled (with #define BIAS_MULT), the buffer adjusts headroom during resizing based on recent usage patterns — giving more space to the side you're actively pushing to. It's automatic and tunable.
