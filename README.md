@@ -90,6 +90,9 @@ For many cases, yes: <br>
 **Will this ever be in the STL?** <br>
 Unlikely — the STL already has std::deque, std::vector, std::list, etc., and avoids redundancy. But this structure could live in performance-focused libraries or game engines where custom memory layouts matter.
 
+**Did you use AI?** <br>
+Yes, I did! However, all the AI Chatbots I used kept making mistakes, especially when my source file got big, so I had to carefully review each modification.
+
 ## 📜 License
 
 This project is distributed under the terms of the AGPLv3 License. The full license text can be found in the  [LICENSE](LICENSE) file. For companies requiring a commercial license with different terms than the AGPLv3, I offer a perpetual license for a single payment of 50 euros per company, allowing internal use without resale rights. Please reach out to me on [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/) to inquire about purchasing.
