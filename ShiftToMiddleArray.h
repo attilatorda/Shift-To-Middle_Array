@@ -255,12 +255,12 @@ public:
 	// Accessors
 
     T& operator[](size_t  index) {
-        STM_ASSERT(index >= 0 && index < size(), "Index out of range");
+        STM_ASSERT(index < size(), "Index out of range");
         return data[head + index];
     }
 
     const T& operator[](size_t  index) const {
-        STM_ASSERT(index >= 0 && index < size(), "Index out of range");
+        STM_ASSERT(index < size(), "Index out of range");
         return data[head + index];
     }
 
