@@ -7,7 +7,7 @@ template <typename T>
 class ExpandingRingBuffer {
 private:
     T* buffer;
-    size_t head, tail, capacity;
+    size_t capacity, head, tail;
 
     void resize() {
         size_t new_capacity = capacity * 2;
@@ -32,7 +32,7 @@ private:
 
 public:
     explicit ExpandingRingBuffer(size_t size = 8)
-        : capacity(size), head(0), tail(0) {
+        : capacity(size), head(0), tail(0) {  // Now matches declaration order
         buffer = (T*)std::malloc(capacity * sizeof(T));
         if (!buffer) std::exit(EXIT_FAILURE);
     }

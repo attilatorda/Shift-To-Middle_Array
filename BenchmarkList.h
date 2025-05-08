@@ -15,7 +15,7 @@ double benchmark_random_operations(int size, int operations, const int iteration
 
     ContainerType container;
     bool spikeMode = false;
-    volatile int stored_value = 0; // Prevent compiler optimizations
+    [[maybe_unused]] volatile int stored_value = 0; // Prevent compiler optimizations
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -28,7 +28,7 @@ double benchmark_random_operations(int size, int operations, const int iteration
         // Mixed random operations
         for (int j = 0; j < operations; ++j) {
             if (container.empty()) continue;
-            int index = rng() % container.size();
+            size_t index = rng() % container.size();
 
             int op = op_dist(rng);
             switch (op) {
@@ -43,9 +43,9 @@ double benchmark_random_operations(int size, int operations, const int iteration
                     if (index < container.size()) stored_value = container[index];
                     break;
                 case 3: // Spike event: randomly remove/add 10% of elements
-                    int spike_size = container.size() / 10;
-                    for (int k = 0; k < spike_size; ++k) {
-                        int spike_index = rng() % container.size();
+                    size_t spike_size = container.size() / 10;
+                    for (size_t k = 0; k < spike_size; ++k) {
+                        size_t spike_index = rng() % container.size();
 
                         if (spikeMode && !container.empty()) {
                             container[spike_index] = container.back();

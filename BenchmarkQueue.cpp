@@ -1,4 +1,3 @@
-#pragma once
 #include "BenchmarkQueue.h"
 
 using namespace std;

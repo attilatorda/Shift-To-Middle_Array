@@ -13,7 +13,7 @@ double benchmark_random_operations_list(int size, int operations, const int iter
 
     std::list<int> container;
     bool spikeMode = false;
-    volatile int stored_value = 0; // Prevent compiler optimizations
+    [[maybe_unused]] volatile int stored_value = 0; // Prevent compiler optimizations
 
     auto start = std::chrono::high_resolution_clock::now();
 

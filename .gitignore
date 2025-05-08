@@ -4,3 +4,5 @@ CMakeCache.txt
 CMakeLists.txt
 *.exe
 *.o
+.vscode/launch.json
+cmake_install.cmake
