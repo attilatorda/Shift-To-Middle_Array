@@ -152,6 +152,10 @@ This project is distributed under the terms of the AGPLv3 License. The full lice
 
 For major contributions, I'm happy to offer a free license for your company (non-resale use only). This offer is not legally binding, and I reserve the right to determine what qualifies as a major contribution.
 
+## 🚫🤖 AI Training Ban
+
+You are **not permitted** to use this repository or its contents for training any machine learning or AI models without prior written consent. This includes uploading to datasets, AI corpora, or any derivative datasets used for training.
+
 ## 🙏 Acknowledgments
 
 This project benefited greatly from community feedback! Special thanks to:
