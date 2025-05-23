@@ -78,7 +78,11 @@ The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ens
 -16GB RAM <br>
 
 ## 📂 Installation & Compilation
-The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++20 or later and a standards-compliant compiler (I used g++).
+The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++ 20 or later and a standards-compliant compiler. I recommend to compile with these flags: <br>
+
+```sh
+g++ -std=c++20 -O3 -Wall -Wextra -pedantic -fopenmp 
+```
 
 To run the **Java benchmarks**, ensure you have the **Trove library** installed. Compile and execute using:
 ```sh
