@@ -71,13 +71,13 @@ The following table compares the time complexity of Shift-To-Middle Array operat
 ## 🏆 Performance Benchmarks
 Benchmarks comparing **Shift-To-Middle Array vs. `std::deque` vs. ExpandingRingBuffer vs. `std::queue`** demonstrate that performance improvements depend on **CPU and GPU capabilities**, such as **multi-core parallelism, SIMD optimizations, and cache efficiency**.
 
-The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ensuring high-performance execution. Results vary based on **hardware specifications** and **workload characteristics**.
+The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ensuring high-performance execution. Results vary based on **hardware specifications** and **workload characteristics**. <br>
 
--AMD Ryzen 5 2600X Six-Core Processor
--NVIDIA GeForce GTX 1660 SUPER
--16GB RAM
+-AMD Ryzen 5 2600X Six-Core Processor <br>
+-NVIDIA GeForce GTX 1660 SUPER <br>
+-16GB RAM <br>
 
-📂 Installation & Compilation
+## 📂 Installation & Compilation
 The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++20 or later and a standards-compliant compiler (I used g++).
 
 To run the **Java benchmarks**, ensure you have the **Trove library** installed. Compile and execute using:
