@@ -21,6 +21,32 @@
   #define STM_ASSERT(cond, msg) ((void)0)
 #endif
 
+// Define one of these before including this header:
+// - CLEANUP_MODE_AUTO (default): Safe cleanup for non-trivial types, lazy for trivial types
+// - CLEANUP_MODE_LAZY: Never cleanup (fastest, but may leak for non-trivial types)
+// - CLEANUP_MODE_ALWAYS: Always cleanup (safest, but slower for trivial types)
+
+#if !defined(CLEANUP_MODE_AUTO) && !defined(CLEANUP_MODE_LAZY) && !defined(CLEANUP_MODE_ALWAYS)
+#define CLEANUP_MODE_AUTO
+#endif
+
+// Internal helper macros for cleanup logic
+#ifdef CLEANUP_MODE_ALWAYS
+    #define SHOULD_CLEANUP_ELEMENT(T) true
+#elif defined(CLEANUP_MODE_LAZY)
+    #define SHOULD_CLEANUP_ELEMENT(T) false
+#else // CLEANUP_MODE_AUTO
+    #define SHOULD_CLEANUP_ELEMENT(T) (!std::is_trivially_copyable_v<T>)
+#endif
+
+// Cleanup implementation macro
+#define CLEANUP_ELEMENT_IF_NEEDED(ptr, T) \
+    do { \
+        if constexpr (SHOULD_CLEANUP_ELEMENT(T)) { \
+            (ptr)->~T(); \
+        } \
+    } while(0)
+
 template <typename T, float ResizeMult = 2.0f>
 class ShiftToMiddleArray {
 
@@ -333,6 +359,8 @@ public:
     }	
 
     void remove_head() {
+        // Cleanup the element being removed if needed
+		CLEANUP_ELEMENT_IF_NEEDED(&data[head], T);
         if (!empty()) ++head;
 #ifdef ALLOW_SHRINKING
 		shrink_if_needed();
@@ -340,6 +368,8 @@ public:
     }
 
     void remove_tail() {
+        // Cleanup the element being removed if needed
+        CLEANUP_ELEMENT_IF_NEEDED(&data[tail], T);
         if (!empty()) --tail;
 #ifdef ALLOW_SHRINKING
 		shrink_if_needed();
