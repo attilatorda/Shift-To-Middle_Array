@@ -71,10 +71,18 @@ The following table compares the time complexity of Shift-To-Middle Array operat
 ## 🏆 Performance Benchmarks
 Benchmarks comparing **Shift-To-Middle Array vs. `std::deque` vs. ExpandingRingBuffer vs. `std::queue`** demonstrate that performance improvements depend on **CPU and GPU capabilities**, such as **multi-core parallelism, SIMD optimizations, and cache efficiency**.
 
-The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ensuring high-performance execution. Results vary based on **hardware specifications** and **workload characteristics**.
+The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ensuring high-performance execution. Results vary based on **hardware specifications** and **workload characteristics**. <br>
 
-📂 Installation & Compilation
-The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++20 or later and a standards-compliant compiler (I used g++).
+-AMD Ryzen 5 2600X Six-Core Processor <br>
+-NVIDIA GeForce GTX 1660 SUPER <br>
+-16GB RAM <br>
+
+## 📂 Installation & Compilation
+The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++ 20 or later and a standards-compliant compiler. I recommend to compile with these flags: <br>
+
+```sh
+g++ -std=c++20 -O3 -Wall -Wextra -pedantic -fopenmp 
+```
 
 To run the **Java benchmarks**, ensure you have the **Trove library** installed. Compile and execute using:
 ```sh
@@ -151,6 +159,10 @@ For scenarios favoring speed over strict correctness, this variant introduces pr
 This project is distributed under the terms of the AGPLv3 License. The full license text can be found in the  [LICENSE](LICENSE) file. For companies requiring a commercial license with different terms than the AGPLv3, I offer a perpetual license for a single payment of 50 euros per company, allowing internal use without resale rights. Please reach out to me on [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/) to inquire about purchasing.
 
 For major contributions, I'm happy to offer a free license for your company (non-resale use only). This offer is not legally binding, and I reserve the right to determine what qualifies as a major contribution.
+
+## 🚫🤖 AI Training Ban
+
+You are **not permitted** to use this repository or its contents for training any machine learning or AI models without prior written consent. This includes uploading to datasets, AI corpora, or any derivative datasets used for training.
 
 ## 🙏 Acknowledgments
 
