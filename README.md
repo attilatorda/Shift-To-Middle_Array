@@ -4,23 +4,23 @@ The **Shift-To-Middle Array** is a dynamic array designed to optimize **insertio
 
 ![Shift-To-Middle Array](stm.png)
 
-## 🌟 Features
+## Features
 
-✅ **Amortized O(1) insertions & deletions at both ends**  
-✅ **Fast random access (O(1))**  
-✅ **Better cache locality than linked lists**  
-✅ **Supports SIMD & parallel optimizations**  
-✅ **Minimizes memory overhead and avoids fragmentation unlike std::deque** <br>
-✅ **Dynamic biasing for push-heavy workloads (#define BIAS_MULT)** <br>
-✅ **Manual shrink_to_fit() to reclaim unused memory** <br>
-✅ **Optional bounds checking** <br>
-✅ **Optional automatic shrinking**
+**-Amortized O(1) insertions & deletions at both ends**  
+**-Fast random access (O(1))**  
+**-Better cache locality than linked lists**  
+**-Supports SIMD & parallel optimizations**  
+**-Minimizes memory overhead and avoids fragmentation unlike std::deque** <br>
+**-Dynamic biasing for push-heavy workloads (#define BIAS_MULT)** <br>
+**-Manual shrink_to_fit() to reclaim unused memory** <br>
+**-Optional bounds checking** <br>
+**-Optional automatic shrinking**
 
-## 📌 How It Works
+## How It Works
 
 Traditional dynamic arrays often suffer from costly shifts when inserting at the front, and structures like std::deque rely on fragmented memory blocks to mitigate this. The Shift-To-Middle Array takes a different approach: it dynamically re-centers data during resizing, ensuring balanced space on both ends and minimizing copying — all while maintaining a contiguous memory layout.
 
-## 🚀 Time Complexity Comparison
+## Time Complexity Comparison
 
 The following table compares the time complexity of Shift-To-Middle Array operations with other common data structures:
 
@@ -35,7 +35,7 @@ The following table compares the time complexity of Shift-To-Middle Array operat
 | Deletion in middle         | O(n)                     | O(n)        | O(n)                 |
 | Cache Locality             | Excellent                | Poor        | Excellent            |
 
-## 📙Theoretical Properties of STM Array
+## Theoretical Properties of STM Array
 
 | Operation          | Best Case         | Average Case                | Worst Case          | Notes                          |
 |--------------------|-------------------|-----------------------------|---------------------|--------------------------------|
@@ -68,7 +68,7 @@ The following table compares the time complexity of Shift-To-Middle Array operat
 
 **Note**: I'm still reviewing this section!
 
-## 🏆 Performance Benchmarks
+## Performance Benchmarks
 Benchmarks comparing **Shift-To-Middle Array vs. `std::deque` vs. ExpandingRingBuffer vs. `std::queue`** demonstrate that performance improvements depend on **CPU and GPU capabilities**, such as **multi-core parallelism, SIMD optimizations, and cache efficiency**.
 
 The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ensuring high-performance execution. Results vary based on **hardware specifications** and **workload characteristics**. <br>
@@ -79,7 +79,9 @@ The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ens
 
 For full benchmark details, check out the [publication](ShiftToMiddleArray.pdf). The provided **Python scripts** can be used to visualize performance metrics from CSV benchmark results.
 
-## 📂 Installation & Compilation
+**Note**: Performances are being reevaluated as I'm making a new version of the publication!
+
+## Installation & Compilation
 The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++ 20 or later and a standards-compliant compiler. I recommend to compile with these flags: <br>
 
 ```sh
@@ -99,7 +101,7 @@ java -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove
 - **Backend Frameworks**
 - **Scientific Computing**
 
-## 🏛 History
+## History
 
 The Shift-To-Middle Array was independently developed by Attila Torda as a personal project during free time, aiming to create a more efficient implementation strategy for lists and deques. This project explored whether a contiguous-memory approach with dynamic mid-shifting could offer better balance for insertions, deletions, and random access.
 
@@ -109,11 +111,11 @@ The Shift-To-Middle Array was independently developed by Attila Torda as a perso
 
 After the publication I implemented the **bias** feature. I plan to make more tests, benchmarks and improvements, then planning to port the data structure to other languages and ecosystems.
 
-## ❓ FAQ
+## FAQ
 
 **Did you reinvent the array-based deque?**
 
-No. The Shift-to-Middle (STM) Array is an implementation strategy that can be used for various data structures, including lists, queues, and deques. While both STM arrays and traditional array deques use array-backed storage, they optimize for fundamentally different operations and access patterns.
+Yes and no!. The Shift-to-Middle (STM) Array is an implementation strategy that can be used for various data structures, including lists, queues, and deques. While both STM arrays and traditional array deques use array-backed storage, they optimize for fundamentally different operations and access patterns.
 
 A traditional array deque is optimized for operations at its ends (head and tail), providing O(1) performance for adding or removing elements there. However, inserting or deleting elements in the middle requires shifting a large number of elements, resulting in O(n) time complexity.
 
@@ -133,12 +135,12 @@ Yes, I did! The project benefited from both AI assistance and community feedback
 
 AI Help: Even the name "Shift-To-Middle Array" was AI-generated! However, I encountered challenges—when my source files grew large, AI chatbots often made mistakes, so I had to carefully review each modification.
 
-Community Feedback: This project also improved thanks to input from the Hacker News and Reddit (r/algorithms) communities. Their technical insights helped refine the core ideas. Special shoutout to these discussions:
+Community Feedback: This project also improved thanks to input from the Hacker News and Reddit (r/algorithms) communities. Their technical insights helped refine the implementation. Special shoutout to these discussions:
 
 [Hacker News thread on data structure efficiency](https://news.ycombinator.com/item?id=43456669) <br>
 [Reddit r/algorithms feedback discussion](https://www.reddit.com/r/algorithms/comments/1jix7zi/comment/mjtou49/?context=3)
 
-## 🔄 Variations
+## Variations
 
 **Fixed-Size Implementation** <br>
 A simple, memory-efficient version where the array has a predefined maximum capacity.
@@ -146,14 +148,10 @@ A simple, memory-efficient version where the array has a predefined maximum capa
 **Unrolled Shift-to-Middle Array** <br>
 A hybrid between an unrolled linked list and a shift-to-middle (STM) array, balancing cache efficiency and dynamic operations.
 
-## 📜 License
+## License
 
 This project is distributed under the terms of the AGPLv3 License. The full license text can be found in the  [LICENSE](LICENSE) file. For companies requiring a commercial license with different terms than the AGPLv3, I offer a perpetual license for a single payment of 50 euros per company, allowing internal use without resale rights. Please reach out to me on [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/) to inquire about purchasing.
 
-## 🚫🤖 AI Training Ban
+## AI Training Ban
 
 You are **not permitted** to use this repository or its contents for training any machine learning or AI models without prior written consent. This includes uploading to datasets, AI corpora, or any derivative datasets used for training.
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open an issue or pull request.
