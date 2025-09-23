@@ -85,7 +85,7 @@ For full benchmark details, check out the [publication](ShiftToMiddleArray.pdf).
 The Shift-To-Middle Array is a single-header, templated C++ class. To use it, simply include ShiftToMiddleArray.h in your project. Requirements: C++ 20 or later and a standards-compliant compiler. I recommend to compile with these flags: <br>
 
 ```sh
-g++ -std=c++20 -O3 -Wall -Wextra -pedantic -fopenmp 
+g++ -std=c++20 -Ofast -Wall -Wextra -Werror -pedantic main.cpp BenchmarkQueue.cpp BenchmarkDequeue.cpp BenchmarkList.cpp -o queue_benchmarks
 ```
 
 To run the **Java benchmarks**, ensure you have the **Trove library** installed. Compile and execute using:

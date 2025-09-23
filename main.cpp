@@ -4,8 +4,8 @@
 #include <chrono>
 #include <iostream>
 #include <random>
+#include <thread>
 #include "ShiftToMiddleArray.h"
-#include "BenchmarkParallelDQ.h"
 #include "ExpandingRingBuffer.h"
 #include "BenchmarkDequeue.h"
 #include "BenchmarkQueue.h"
@@ -61,8 +61,9 @@ void checkValidity() {
 int main() {
 
     std::cout << "C++ version: GCC " << __cplusplus << std::endl;
-    std::cout << "Compiler flags: -O3" << std::endl;
-    std::cout << "Number of threads: " << omp_get_max_threads() << std::endl;
+    unsigned int cores = std::thread::hardware_concurrency();
+    if (cores == 0) cores = 1; // fallback
+    std::cout << "Number of threads: " << cores << std::endl;
 
     checkValidity();
 
