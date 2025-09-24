@@ -97,7 +97,7 @@ java -cp trove-3.0.3.jar; ShiftToMiddleArrayBenchmarkTrove
 ## 🔬 Possible Applications
 
 - **Embedded systems**
-- **Game engines & real-time applications**
+- **Game Engines & Real-Time Applications**
 - **Backend Frameworks**
 - **Scientific Computing**
 
