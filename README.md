@@ -30,10 +30,12 @@ The following table compares the time complexity of Shift-To-Middle Array operat
 | Insertion at head          | O(n)                     | O(1)        | O(1) amortized       |
 | Insertion at tail          | O(1) amortized           | O(1)        | O(1) amortized       |
 | Insertion in middle        | O(n)                     | O(n)        | O(n)                 |
-| Deletion at head           | O(n)                     | O(1)        | O(1) amortized       |
-| Deletion at tail           | O(1)                     | O(1)        | O(1) amortized       |
+| Deletion at head           | O(n)                     | O(1)        | O(1)                 |
+| Deletion at tail           | O(1)                     | O(1)        | O(1)                 |
 | Deletion in middle         | O(n)                     | O(n)        | O(n)                 |
 | Cache Locality             | Excellent                | Poor        | Excellent            |
+
+Note: Deletion at head and tail are O(1) if shrinking is disabled, and O(1) amortized if shrinking is enabled (since resizing only occurs occasionally).
 
 ## Theoretical Properties of STM Array
 
