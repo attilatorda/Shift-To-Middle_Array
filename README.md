@@ -43,7 +43,7 @@ Note: Deletion at head and tail are O(1) if shrinking is disabled, and O(1) amor
 | **Random Access**  | Θ(1)             | Θ(1)                       | Θ(1)               | Direct block indexing          |
 | **Insert at Front/End**  | Θ(1)             | Θ(1) amortized              | Θ(n)               | Occurs during full expansion   |
 | **Delete at Front/End**  | Θ(1)             | Θ(1)                       | Θ(1)               | No shrinkage implemented       |
-| **Middle Insert**  | Θ(n)             | Θ(n/2) ≈ Θ(n                     | Θ(n)       | On average shifts half the elements due to central bias     |
+| **Middle Insert**  | Θ(n)             | Θ(n/2) ≈ Θ(n)                    | Θ(n)       | On average shifts half the elements due to central bias     |
 | **Middle Delete**  | Θ(n)             | Θ(n/2) ≈ Θ(n)                    | Θ(n)       | On average shifts half the elements due to central bias     |
 
 #### Key to Notations:
