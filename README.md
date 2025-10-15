@@ -60,7 +60,7 @@ The benchmarks were compiled using **GCC with the `-O3` optimization flag**, ens
 -NVIDIA GeForce GTX 1660 SUPER <br>
 -16GB RAM <br>
 
-For full benchmark details, check out the [publication](ShiftToMiddleArray.pdf). The provided **Python scripts** can be used to visualize performance metrics from CSV benchmark results.
+For full benchmark details, check out the [paper](Papers/ShiftToMiddleArray_WorkingPaper.pdf). The provided **Python scripts** can be used to visualize performance metrics from CSV benchmark results.
 
 **Note**: Performances are being reevaluated as I'm making a new version of the publication!
 
