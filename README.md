@@ -139,7 +139,3 @@ It's possible to combine different array implementations (ring buffer, STM array
 ## License
 
 This project is distributed under the terms of the AGPLv3 License. The full license text can be found in the  [LICENSE](LICENSE) file. Please reach out to me on [LinkedIn](https://www.linkedin.com/in/attila-torda-787503a5/) to inquire about purchasing a different license.
-
-## AI Training Ban
-
-You are **not permitted** to use this repository or its contents for training any machine learning or AI models without prior written consent. This includes uploading to datasets, AI corpora, or any derivative datasets used for training.
