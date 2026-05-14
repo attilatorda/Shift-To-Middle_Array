@@ -523,29 +523,32 @@ public:
 	}
 
 	bool deserialize(std::istream& is) {
+		size_t new_head = 0;
+		size_t serialized_size = 0;
+
 		// Read head (starting index)
-		if (!is.read(reinterpret_cast<char*>(&head), sizeof(size_t))) {
+		if (!is.read(reinterpret_cast<char*>(&new_head), sizeof(size_t))) {
 			return false;
 		}
 
-		// Read tail (end index) or size to reconstruct tail
-		size_t serialized_size;
+		// Read size to reconstruct tail
 		if (!is.read(reinterpret_cast<char*>(&serialized_size), sizeof(size_t))) {
 			return false;
 		}
 
-		if (head > capacity_ || serialized_size > capacity_ || head + serialized_size > capacity_) {
+		if (new_head > capacity_ || serialized_size > capacity_ || new_head + serialized_size > capacity_) {
 			return false;
 		}
 
 		// Read data into buffer
-		is.read(reinterpret_cast<char*>(data + head), serialized_size * sizeof(T));
+		is.read(reinterpret_cast<char*>(data + new_head), serialized_size * sizeof(T));
 		if (is.fail()) {
 			return false;
 		}
 
-		// Reconstruct tail
-		tail = head + serialized_size;
+		// Commit state only on successful deserialize
+		head = new_head;
+		tail = new_head + serialized_size;
 		return true;
 	}
 };
