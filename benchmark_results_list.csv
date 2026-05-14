@@ -1,0 +1,15 @@
+Size,Type,Time
+10,std::vector,0.326987
+10,ShiftToMiddleArray,0.328213
+100,std::vector,0.379412
+100,ShiftToMiddleArray,0.383725
+1000,std::vector,0.502987
+1000,ShiftToMiddleArray,0.50355
+5000,std::vector,1.1075
+5000,ShiftToMiddleArray,1.09507
+10000,std::vector,1.68244
+10000,ShiftToMiddleArray,1.69249
+100000,std::vector,12.5827
+100000,ShiftToMiddleArray,12.8913
+500000,std::vector,69.3413
+500000,ShiftToMiddleArray,78.2926

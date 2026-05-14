@@ -1,0 +1,1 @@
+g++ -I D:\Developer\Boost_1_87_0 -std=c++20 -O3 -Wall -Wextra -pedantic -fopenmp correctness_tests.cpp  -o corr_test.exe

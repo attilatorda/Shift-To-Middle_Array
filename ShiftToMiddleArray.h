@@ -47,7 +47,7 @@
         } \
     } while(0)
 
-template <typename T, float ResizeMult = 2.0f>
+template <typename T, size_t ResizeMult = 2>
 class ShiftToMiddleArray {
 
 private:
@@ -237,13 +237,13 @@ public:
 	ShiftToMiddleArray& operator=(const ShiftToMiddleArray& other) {
 		if (this != &other) {
 			ShiftToMiddleArray temp(other);  // Use copy constructor
-			swap(*this, temp);              // Swap with temporary
+			this->swap(temp);              // Swap with temporary
 		}
 		return *this;
 	}
 
 	ShiftToMiddleArray& operator=(ShiftToMiddleArray&& other) noexcept {
-		swap(*this, other);
+		this->swap(other);
 		return *this;
 	}
 
@@ -269,6 +269,17 @@ public:
 		swap(a.capacity_, b.capacity_);
 #ifdef BIAS_MULT	
 		swap(a.bias, b.bias);
+#endif
+	}
+
+	void swap(ShiftToMiddleArray& other) noexcept {
+		using std::swap;
+		swap(data, other.data);
+		swap(head, other.head);
+		swap(tail, other.tail);
+		swap(capacity_, other.capacity_);
+#ifdef BIAS_MULT
+		swap(bias, other.bias);
 #endif
 	}
 	
@@ -350,8 +361,9 @@ public:
 		remove_tail();
 	}
 
-    void pop(const T& value) {
-        pop_back(value);
+	[[deprecated("pop(const T&) ignores its argument; use pop() or pop_back()")]]
+    void pop(const T&) {
+        pop_back();
     }
 	
     void pop() {
@@ -359,45 +371,49 @@ public:
     }	
 
     void remove_head() {
+		if (empty()) return;
         // Cleanup the element being removed if needed
 		CLEANUP_ELEMENT_IF_NEEDED(&data[head], T);
-        if (!empty()) ++head;
+		++head;
 #ifdef ALLOW_SHRINKING
 		shrink_if_needed();
 #endif		
     }
 
     void remove_tail() {
+		if (empty()) return;
         // Cleanup the element being removed if needed
-        CLEANUP_ELEMENT_IF_NEEDED(&data[tail], T);
-        if (!empty()) --tail;
+		CLEANUP_ELEMENT_IF_NEEDED(&data[tail - 1], T);
+		--tail;
 #ifdef ALLOW_SHRINKING
 		shrink_if_needed();
 #endif		
     }
 
     void insert(size_t  at, const T& value) {
-        if (at < head || at > tail) {
+		if (at > size()) {
             throw std::out_of_range("Insert position out of range");
         }
+		size_t absolute_at = head + at;
 
         size_t  mid = (head + tail) / 2;
-        if (at < mid) {
+        if (absolute_at < mid) {
             if (head == 0) resize_if_needed();
             --head;
-            std::memmove(data + head, data + head + 1, (at - head) * sizeof(T));
-            data[at] = value;
+			absolute_at = head + at;
+            std::memmove(data + head, data + head + 1, (absolute_at - head) * sizeof(T));
+            data[absolute_at] = value;
         } else {
             if (tail == capacity_) resize_if_needed();
-            std::memmove(data + at + 1, data + at, (tail - at) * sizeof(T));
-            data[at] = value;
+			absolute_at = head + at;
+            std::memmove(data + absolute_at + 1, data + absolute_at, (tail - absolute_at) * sizeof(T));
+            data[absolute_at] = value;
             ++tail;
         }
     }
 
 	void delete_at(size_t index) {
-		STM_ASSERT(index < size(), "ShiftToMiddleArray::delete_at - index " + std::to_string(index) + 
-			" out of range (size=" + std::to_string(size()) + ")");
+		STM_ASSERT(index < size(), "ShiftToMiddleArray::delete_at index out of range");
 		
 		size_t absolute_pos = head + index;
 		bool closer_to_head = (index < size() / 2);
@@ -444,11 +460,19 @@ public:
         ptr_t ptr;
     public:
         explicit IteratorBase(ptr_t p) : ptr(p) {}
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = ptr_t;
         using reference = std::conditional_t<Const, const T&, T&>;
         
         reference operator*() const { return *ptr; }
+        pointer operator->() const { return ptr; }
         IteratorBase& operator++() { ++ptr; return *this; }
         IteratorBase operator++(int) { auto tmp = *this; ++ptr; return tmp; }
+        IteratorBase& operator--() { --ptr; return *this; }
+        IteratorBase operator--(int) { auto tmp = *this; --ptr; return tmp; }
+        bool operator==(const IteratorBase& other) const { return ptr == other.ptr; }
         bool operator!=(const IteratorBase& other) const { return ptr != other.ptr; }
     };
 
@@ -473,10 +497,17 @@ public:
 
     void shrink_to_fit() {
         size_t new_capacity = size();
+		if (new_capacity == 0) {
+			new_capacity = 1;
+		}
         T* new_data = static_cast<T*>(std::malloc(new_capacity * sizeof(T)));
         if (!new_data) throw std::bad_alloc();
 
-        std::memcpy(new_data, data + head, (tail - head) * sizeof(T));
+		if constexpr (std::is_trivially_copyable_v<T>) {
+			std::memcpy(new_data, data + head, (tail - head) * sizeof(T));
+		} else {
+			std::uninitialized_copy(data + head, data + tail, new_data);
+		}
         std::free(data);
         data = new_data;
         tail -= head;
@@ -503,6 +534,10 @@ public:
 			return false;
 		}
 
+		if (head > capacity_ || serialized_size > capacity_ || head + serialized_size > capacity_) {
+			return false;
+		}
+
 		// Read data into buffer
 		is.read(reinterpret_cast<char*>(data + head), serialized_size * sizeof(T));
 		if (is.fail()) {
@@ -517,5 +552,5 @@ public:
 
 template<typename T>
 void swap(ShiftToMiddleArray<T>& lhs, ShiftToMiddleArray<T>& rhs) noexcept {
-    lhs.swap(rhs);
+	lhs.swap(rhs);
 }
