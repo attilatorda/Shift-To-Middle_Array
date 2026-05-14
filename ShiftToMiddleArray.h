@@ -121,6 +121,9 @@ private:
 			std::memcpy(new_data + new_head, data + head, (tail - head) * sizeof(T));
 		} else {
 			std::uninitialized_copy(data + head, data + tail, new_data + new_head);
+			for (size_t i = head; i < tail; ++i) {
+				data[i].~T();
+			}
 		}
 
         std::free(data);
@@ -188,8 +191,8 @@ public:
     // Rule of Five
 
     ~ShiftToMiddleArray() {
-        for (size_t i = 0; i < size(); ++i) {
-            data[(head + i) % capacity_].~T();
+        for (size_t i = head; i < tail; ++i) {
+            CLEANUP_ELEMENT_IF_NEEDED(&data[i], T);
         }
         std::free(data);
     }
@@ -207,7 +210,7 @@ public:
 			if (!data) throw std::bad_alloc();
 			
 			if constexpr (std::is_trivially_copyable_v<T>) {
-				std::memcpy(data, other.data, other.capacity_ * sizeof(T));
+				std::memcpy(data + head, other.data + other.head, (other.tail - other.head) * sizeof(T));
 			} else {
 				try {
 					std::uninitialized_copy(other.data + other.head, other.data + other.tail, data + head);
@@ -332,7 +335,7 @@ public:
 #endif
 			resize_if_needed();
 		}
-        data[--head] = value;
+        new (&data[--head]) T(value);
     }
 
     void push_back(const T& value) {
@@ -342,7 +345,7 @@ public:
 #endif
 			resize_if_needed();
 		}
-        data[tail++] = value;
+        new (&data[tail++]) T(value);
     }
 
     void push(const T& value) {
@@ -401,13 +404,29 @@ public:
             if (head == 0) resize_if_needed();
             --head;
 			absolute_at = head + at;
-            std::memmove(data + head, data + head + 1, (absolute_at - head) * sizeof(T));
-            data[absolute_at] = value;
+            if constexpr (std::is_trivially_copyable_v<T>) {
+                std::memmove(data + head, data + head + 1, (absolute_at - head) * sizeof(T));
+                data[absolute_at] = value;
+            } else {
+                for (size_t i = head; i < absolute_at; ++i) {
+                    new (&data[i]) T(std::move(data[i + 1]));
+                    data[i + 1].~T();
+                }
+                new (&data[absolute_at]) T(value);
+            }
         } else {
             if (tail == capacity_) resize_if_needed();
 			absolute_at = head + at;
-            std::memmove(data + absolute_at + 1, data + absolute_at, (tail - absolute_at) * sizeof(T));
-            data[absolute_at] = value;
+            if constexpr (std::is_trivially_copyable_v<T>) {
+                std::memmove(data + absolute_at + 1, data + absolute_at, (tail - absolute_at) * sizeof(T));
+                data[absolute_at] = value;
+            } else {
+                for (size_t i = tail; i > absolute_at; --i) {
+                    new (&data[i]) T(std::move(data[i - 1]));
+                    data[i - 1].~T();
+                }
+                new (&data[absolute_at]) T(value);
+            }
             ++tail;
         }
     }
@@ -460,7 +479,7 @@ public:
         ptr_t ptr;
     public:
         explicit IteratorBase(ptr_t p) : ptr(p) {}
-        using iterator_category = std::bidirectional_iterator_tag;
+        using iterator_category = std::random_access_iterator_tag;
         using value_type = T;
         using difference_type = std::ptrdiff_t;
         using pointer = ptr_t;
@@ -472,9 +491,22 @@ public:
         IteratorBase operator++(int) { auto tmp = *this; ++ptr; return tmp; }
         IteratorBase& operator--() { --ptr; return *this; }
         IteratorBase operator--(int) { auto tmp = *this; --ptr; return tmp; }
+        IteratorBase& operator+=(difference_type n) { ptr += n; return *this; }
+        IteratorBase& operator-=(difference_type n) { ptr -= n; return *this; }
+        IteratorBase operator+(difference_type n) const { return IteratorBase(ptr + n); }
+        IteratorBase operator-(difference_type n) const { return IteratorBase(ptr - n); }
+        difference_type operator-(const IteratorBase& other) const { return ptr - other.ptr; }
+        reference operator[](difference_type n) const { return *(ptr + n); }
+        bool operator<(const IteratorBase& other) const { return ptr < other.ptr; }
+        bool operator<=(const IteratorBase& other) const { return ptr <= other.ptr; }
+        bool operator>(const IteratorBase& other) const { return ptr > other.ptr; }
+        bool operator>=(const IteratorBase& other) const { return ptr >= other.ptr; }
         bool operator==(const IteratorBase& other) const { return ptr == other.ptr; }
         bool operator!=(const IteratorBase& other) const { return ptr != other.ptr; }
     };
+
+    friend IteratorBase<false> operator+(typename IteratorBase<false>::difference_type n, const IteratorBase<false>& it) { return it + n; }
+    friend IteratorBase<true> operator+(typename IteratorBase<true>::difference_type n, const IteratorBase<true>& it) { return it + n; }
 
     using iterator = IteratorBase<false>;
     using const_iterator = IteratorBase<true>;
@@ -507,6 +539,9 @@ public:
 			std::memcpy(new_data, data + head, (tail - head) * sizeof(T));
 		} else {
 			std::uninitialized_copy(data + head, data + tail, new_data);
+			for (size_t i = head; i < tail; ++i) {
+				data[i].~T();
+			}
 		}
         std::free(data);
         data = new_data;

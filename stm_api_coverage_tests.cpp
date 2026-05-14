@@ -1,6 +1,8 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "ShiftToMiddleArray.h"
 
@@ -77,6 +79,44 @@ static void test_swap_and_deserialize_failures() {
     assert(!a.deserialize(invalid));
 }
 
+static void test_non_trivial_string_insert_delete() {
+    ShiftToMiddleArray<std::string> s;
+    s.push_back("b");
+    s.push_back("d");
+    s.insert(1, "c");
+    s.insert(0, "a");
+    assert(s.size() == 4);
+    assert(s[0] == "a" && s[1] == "b" && s[2] == "c" && s[3] == "d");
+
+    s.delete_at(1);
+    assert(s.size() == 3);
+    assert(s[0] == "a" && s[1] == "c" && s[2] == "d");
+}
+
+static void test_non_trivial_vector_insert_delete() {
+    ShiftToMiddleArray<std::vector<int>> s;
+    s.push_back({1});
+    s.push_back({3});
+    s.insert(1, std::vector<int>{2});
+    assert(s.size() == 3);
+    assert(s[0][0] == 1 && s[1][0] == 2 && s[2][0] == 3);
+
+    s.delete_at(2);
+    assert(s.size() == 2);
+    assert(s[0][0] == 1 && s[1][0] == 2);
+}
+
+static void test_random_access_iterator_ops() {
+    ShiftToMiddleArray<int> s;
+    for (int i = 0; i < 5; ++i) s.push_back(i);
+    auto it = s.begin();
+    it += 3;
+    assert(*it == 3);
+    assert(it - s.begin() == 3);
+    assert(it[1] == 4);
+    assert((s.begin() + 4) > (s.begin() + 1));
+}
+
 int main() {
     std::cout << "Running API coverage tests..." << std::endl;
     std::cout << "  - test_aliases_and_capacity" << std::endl;
@@ -85,6 +125,12 @@ int main() {
     test_iterators();
     std::cout << "  - test_swap_and_deserialize_failures" << std::endl;
     test_swap_and_deserialize_failures();
+    std::cout << "  - test_non_trivial_string_insert_delete" << std::endl;
+    test_non_trivial_string_insert_delete();
+    std::cout << "  - test_non_trivial_vector_insert_delete" << std::endl;
+    test_non_trivial_vector_insert_delete();
+    std::cout << "  - test_random_access_iterator_ops" << std::endl;
+    test_random_access_iterator_ops();
     std::cout << "API coverage tests passed." << std::endl;
     return 0;
 }
