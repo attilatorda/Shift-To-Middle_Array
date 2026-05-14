@@ -1,8 +1,19 @@
 *.class
 *.jar
-CMakeCache.txt
-CMakeLists.txt
 *.exe
 *.o
+
+# IDE
 .vscode/launch.json
+
+# CMake / Ninja generated files
+build/
+CMakeCache.txt
 cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+CMakeFiles/
+*.ninja
+.ninja_deps
+.ninja_log
+compile_commands.json
