@@ -4,8 +4,25 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "BenchmarkList.h"
 #include "ShiftToMiddleArray.h"
+
+static double mean_of(const std::vector<double>& v) {
+    double s = 0.0;
+    for (double x : v) s += x;
+    return v.empty() ? 0.0 : s / static_cast<double>(v.size());
+}
+
+static double stddev_of(const std::vector<double>& v, double mean) {
+    if (v.size() < 2) return 0.0;
+    double ss = 0.0;
+    for (double x : v) {
+        const double d = x - mean;
+        ss += d * d;
+    }
+    return std::sqrt(ss / static_cast<double>(v.size() - 1));
+}
 
 double benchmark_random_operations_list(int size, int operations, const int iterations) {
     std::mt19937 rng(42); // Fixed seed for reproducibility
@@ -70,21 +87,25 @@ void run_benchmarks_list(int operations) {
     int runs = 8; // Number of benchmark runs to average
 
     ofstream results_file("benchmark_results_list.csv");
-    results_file << "Size,Type,Time\n";
+    results_file << "Size,Type,TimeMeanMs,TimeStdMs\n";
 
     for (int size : test_sizes) {
         cout << "Container size: " << size << "\n";
 
-        double vector_total_time = 0.0;
-        double stm_total_time = 0.0;
+        std::vector<double> vector_times;
+        std::vector<double> stm_times;
+        vector_times.reserve(runs);
+        stm_times.reserve(runs);
 
         for (int i = 0; i < runs; ++i) {
-            vector_total_time += benchmark_random_operations<std::vector<int>>(size, operations);
-            stm_total_time += benchmark_random_operations<ShiftToMiddleArray<int>>(size, operations);
+            vector_times.push_back(benchmark_random_operations<std::vector<int>>(size, operations));
+            stm_times.push_back(benchmark_random_operations<ShiftToMiddleArray<int>>(size, operations));
         }
 
-        double vector_avg_time = vector_total_time / runs;
-        double stm_avg_time = stm_total_time / runs;
+        double vector_avg_time = mean_of(vector_times);
+        double stm_avg_time = mean_of(stm_times);
+        double vector_std = stddev_of(vector_times, vector_avg_time);
+        double stm_std = stddev_of(stm_times, stm_avg_time);
 
         cout << "Benchmarking std::vector...\n";
         cout << "std::vector (avg over " << runs << " runs): " << vector_avg_time << " ms\n";
@@ -98,8 +119,8 @@ void run_benchmarks_list(int operations) {
 
         //std::list was too slow, so it was ignored
 
-        results_file << size << ",std::vector," << vector_avg_time << "\n";
-        results_file << size << ",ShiftToMiddleArray," << stm_avg_time << "\n";
+        results_file << size << ",std::vector," << vector_avg_time << "," << vector_std << "\n";
+        results_file << size << ",ShiftToMiddleArray," << stm_avg_time << "," << stm_std << "\n";
     }
 
     results_file.close();

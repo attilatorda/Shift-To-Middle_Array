@@ -1,6 +1,23 @@
 #include "BenchmarkQueue.h"
+#include <cmath>
 
 using namespace std;
+
+static double mean_of(const std::vector<double>& v) {
+    double s = 0.0;
+    for (double x : v) s += x;
+    return v.empty() ? 0.0 : s / static_cast<double>(v.size());
+}
+
+static double stddev_of(const std::vector<double>& v, double mean) {
+    if (v.size() < 2) return 0.0;
+    double ss = 0.0;
+    for (double x : v) {
+        const double d = x - mean;
+        ss += d * d;
+    }
+    return std::sqrt(ss / static_cast<double>(v.size() - 1));
+}
 
 template <typename QueueType, typename InitFunc, typename OperationFunc>
 double benchmark_queue(int size, int operations, InitFunc init, OperationFunc operation) {
@@ -64,7 +81,7 @@ void run_benchmarks_queue(int operations) {
     int runs = 8; // Number of benchmark runs to average
 
     ofstream results_file("benchmark_results_queue.csv");
-    results_file << "Size,Type,Push-heavy,Mixed,Pop-heavy\n";
+    results_file << "Size,Type,PushHeavyMeanMs,PushHeavyStdMs,MixedMeanMs,MixedStdMs,PopHeavyMeanMs,PopHeavyStdMs\n";
 
     cout << "Benchmarking different queue implementations: \n";
     cout << "Operations: " << operations << "\n";
@@ -73,9 +90,14 @@ void run_benchmarks_queue(int operations) {
     cout << "\n\n";
 
     for (int size : test_sizes) {
-        std::array<double, 3> stdQueueTotal = {0, 0, 0};
-        std::array<double, 3> erBufferTotal = {0, 0, 0};
-        std::array<double, 3> stmArrayTotal = {0, 0, 0};
+        std::array<std::vector<double>, 3> stdQueueRuns;
+        std::array<std::vector<double>, 3> erBufferRuns;
+        std::array<std::vector<double>, 3> stmArrayRuns;
+        for (int j = 0; j < 3; ++j) {
+            stdQueueRuns[j].reserve(runs);
+            erBufferRuns[j].reserve(runs);
+            stmArrayRuns[j].reserve(runs);
+        }
 
         for (int i = 0; i < runs; ++i) {
             auto results1 = benchmark_all<std::queue<int>>(size, operations);
@@ -83,17 +105,21 @@ void run_benchmarks_queue(int operations) {
             auto results3 = benchmark_all<ShiftToMiddleArray<int>>(size, operations);
 
             for (int j = 0; j < 3; ++j) {
-                stdQueueTotal[j] += results1[j];
-                erBufferTotal[j] += results2[j];
-                stmArrayTotal[j] += results3[j];
+                stdQueueRuns[j].push_back(results1[j]);
+                erBufferRuns[j].push_back(results2[j]);
+                stmArrayRuns[j].push_back(results3[j]);
             }
         }
 
         std::array<double, 3> stdQueue, erBuffer, stmArray;
+        std::array<double, 3> stdQueueStd, erBufferStd, stmArrayStd;
         for (int j = 0; j < 3; ++j) {
-            stdQueue[j] = stdQueueTotal[j] / runs;
-            erBuffer[j] = erBufferTotal[j] / runs;
-            stmArray[j] = stmArrayTotal[j] / runs;
+            stdQueue[j] = mean_of(stdQueueRuns[j]);
+            erBuffer[j] = mean_of(erBufferRuns[j]);
+            stmArray[j] = mean_of(stmArrayRuns[j]);
+            stdQueueStd[j] = stddev_of(stdQueueRuns[j], stdQueue[j]);
+            erBufferStd[j] = stddev_of(erBufferRuns[j], erBuffer[j]);
+            stmArrayStd[j] = stddev_of(stmArrayRuns[j], stmArray[j]);
         }
 
         cout << "Test size: " << size << "\n";
@@ -109,9 +135,15 @@ void run_benchmarks_queue(int operations) {
         }
         cout << "\n";
 
-        results_file << size << ",std::queue," << stdQueue[0] << "," << stdQueue[1] << "," << stdQueue[2] << "\n";
-        results_file << size << ",ExpandingRingBuffer," << erBuffer[0] << "," << erBuffer[1] << "," << erBuffer[2] << "\n";
-        results_file << size << ",ShiftToMiddleArray," << stmArray[0] << "," << stmArray[1] << "," << stmArray[2] << "\n";
+        results_file << size << ",std::queue," << stdQueue[0] << "," << stdQueueStd[0] << ","
+                     << stdQueue[1] << "," << stdQueueStd[1] << ","
+                     << stdQueue[2] << "," << stdQueueStd[2] << "\n";
+        results_file << size << ",ExpandingRingBuffer," << erBuffer[0] << "," << erBufferStd[0] << ","
+                     << erBuffer[1] << "," << erBufferStd[1] << ","
+                     << erBuffer[2] << "," << erBufferStd[2] << "\n";
+        results_file << size << ",ShiftToMiddleArray," << stmArray[0] << "," << stmArrayStd[0] << ","
+                     << stmArray[1] << "," << stmArrayStd[1] << ","
+                     << stmArray[2] << "," << stmArrayStd[2] << "\n";
     }
 
     results_file.close();

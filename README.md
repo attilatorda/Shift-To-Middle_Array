@@ -38,13 +38,15 @@ Note: Deletion at head and tail are O(1) if shrinking is disabled, and O(1) amor
 
 ## Theoretical Properties of STM Array
 
-| Operation          | Best Case         | Average Case                | Worst Case          | Notes                          |
-|--------------------|-------------------|-----------------------------|---------------------|--------------------------------|
-| **Random Access**  | Θ(1)             | Θ(1)                       | Θ(1)               | Direct block indexing          |
-| **Insert at Front/End**  | Θ(1)             | Θ(1) amortized              | Θ(n)               | Occurs during full expansion   |
-| **Delete at Front/End**  | Θ(1)             | Θ(1)                       | Θ(1)               | No shrinkage implemented       |
-| **Middle Insert**  | Θ(n)             | Θ(n/2) ≈ Θ(n)                    | Θ(n)       | On average shifts half the elements due to central bias     |
-| **Middle Delete**  | Θ(n)             | Θ(n/2) ≈ Θ(n)                    | Θ(n)       | On average shifts half the elements due to central bias     |
+| Operation | Best Case | Average Case | Worst Case | Notes |
+|---|---:|---:|---:|---|
+| **Random Access** | Θ(1) | Θ(1) | Θ(1) | Direct index translation over contiguous storage |
+| **Insert at Front/Back** | Θ(1) | Θ(1) amortized | Θ(n) | Linear case occurs during resize/recenter |
+| **Delete at Front/Back** | Θ(1) | Θ(1) amortized* | Θ(n) | *Amortized when optional shrinking is enabled; otherwise Θ(1) without resize |
+| **Middle Insert** | Θ(1)** | Θ(n) | Θ(n) | **Θ(1) only in narrow cases with adjacent slack; generally requires shifting |
+| **Middle Delete** | Θ(1)** | Θ(n) | Θ(n) | **Θ(1) only in narrow cases with adjacent slack; generally requires shifting |
+
+This README now aligns with the revised paper: we **do not claim amortized Θ(1)** for general middle insert/delete workloads.
 
 #### Key to Notations:
 - **Θ(f(n))**: Tight bound (both upper and lower)

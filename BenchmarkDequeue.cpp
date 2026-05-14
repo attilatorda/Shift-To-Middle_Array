@@ -7,9 +7,26 @@
 #include <iostream>
 #include <fstream>
 #include <omp.h>
+#include <cmath>
 #include "BenchmarkDequeue.h"
 #include "ShiftToMiddleArray.h"
 #include "ExpandingRingBuffer.h"
+
+static double mean_of(const std::vector<double>& v) {
+    double s = 0.0;
+    for (double x : v) s += x;
+    return v.empty() ? 0.0 : s / static_cast<double>(v.size());
+}
+
+static double stddev_of(const std::vector<double>& v, double mean) {
+    if (v.size() < 2) return 0.0;
+    double ss = 0.0;
+    for (double x : v) {
+        const double d = x - mean;
+        ss += d * d;
+    }
+    return std::sqrt(ss / static_cast<double>(v.size() - 1));
+}
 
 template <typename DequeueType>
 double benchmark_deque_growth(int size, int operations, const int iterations = 10) {
@@ -46,7 +63,7 @@ void run_benchmarks_deque(int operations) {
     int runs = 8; // Number of benchmark runs to average
 
     std::ofstream results_file("benchmark_results_deque.csv");
-    results_file << "Size,Type,Time\n";
+    results_file << "Size,Type,TimeMeanMs,TimeStdMs\n";
 
     std::cout << "Benchmarking different deque implementations:\n";
     std::cout << "Operations: " << operations << "\n";
@@ -55,17 +72,23 @@ void run_benchmarks_deque(int operations) {
     std::cout << "\n\n";
 
     for (int size : test_sizes) {
-        double stdDequeTotal = 0.0, erBufferTotal = 0.0, stmArrayTotal = 0.0;
+        std::vector<double> stdDequeTimes, erBufferTimes, stmArrayTimes;
+        stdDequeTimes.reserve(runs);
+        erBufferTimes.reserve(runs);
+        stmArrayTimes.reserve(runs);
 
         for (int i = 0; i < runs; ++i) {
-            stdDequeTotal += benchmark_deque_growth<std::deque<int>>(size, operations);
-            erBufferTotal += benchmark_deque_growth<ExpandingRingBuffer<int>>(size, operations);
-            stmArrayTotal += benchmark_deque_growth<ShiftToMiddleArray<int>>(size, operations);
+            stdDequeTimes.push_back(benchmark_deque_growth<std::deque<int>>(size, operations));
+            erBufferTimes.push_back(benchmark_deque_growth<ExpandingRingBuffer<int>>(size, operations));
+            stmArrayTimes.push_back(benchmark_deque_growth<ShiftToMiddleArray<int>>(size, operations));
         }
 
-        double stdDequeTime = stdDequeTotal / runs;
-        double erBufferTime = erBufferTotal / runs;
-        double stmArrayTime = stmArrayTotal / runs;
+        double stdDequeTime = mean_of(stdDequeTimes);
+        double erBufferTime = mean_of(erBufferTimes);
+        double stmArrayTime = mean_of(stmArrayTimes);
+        double stdDequeStd = stddev_of(stdDequeTimes, stdDequeTime);
+        double erBufferStd = stddev_of(erBufferTimes, erBufferTime);
+        double stmArrayStd = stddev_of(stmArrayTimes, stmArrayTime);
 
         auto compute_speedup = [](double best, double stm) {
             return ((best - stm) / best) * 100;
@@ -81,9 +104,9 @@ void run_benchmarks_deque(int operations) {
         std::cout << "ShiftToMiddleArray was " << std::abs(stm_speedup) << "% "
                   << (stm_speedup < 0 ? "slower" : "faster") << " than the best alternative.\n";
 
-        results_file << size << ",std::deque," << stdDequeTime << "\n";
-        results_file << size << ",ExpandingRingBuffer," << erBufferTime << "\n";
-        results_file << size << ",ShiftToMiddleArray," << stmArrayTime << "\n";
+        results_file << size << ",std::deque," << stdDequeTime << "," << stdDequeStd << "\n";
+        results_file << size << ",ExpandingRingBuffer," << erBufferTime << "," << erBufferStd << "\n";
+        results_file << size << ",ShiftToMiddleArray," << stmArrayTime << "," << stmArrayStd << "\n";
     }
     results_file.close();
     std::cout << "Results saved to benchmark_results_deque.csv\n";

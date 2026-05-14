@@ -1,0 +1,8 @@
+# Ignore everything in this folder by default
+*
+
+# Keep this ignore file tracked
+!.gitignore
+
+# Keep PDFs tracked
+!*.pdf
