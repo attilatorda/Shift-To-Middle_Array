@@ -93,18 +93,23 @@ void run_benchmarks_list(int operations) {
         cout << "Container size: " << size << "\n";
 
         std::vector<double> vector_times;
+        std::vector<double> list_times;
         std::vector<double> stm_times;
         vector_times.reserve(runs);
+        list_times.reserve(runs);
         stm_times.reserve(runs);
 
         for (int i = 0; i < runs; ++i) {
             vector_times.push_back(benchmark_random_operations<std::vector<int>>(size, operations));
+            list_times.push_back(benchmark_random_operations_list(size, operations, 10));
             stm_times.push_back(benchmark_random_operations<ShiftToMiddleArray<int>>(size, operations));
         }
 
         double vector_avg_time = mean_of(vector_times);
+        double list_avg_time = mean_of(list_times);
         double stm_avg_time = mean_of(stm_times);
         double vector_std = stddev_of(vector_times, vector_avg_time);
+        double list_std = stddev_of(list_times, list_avg_time);
         double stm_std = stddev_of(stm_times, stm_avg_time);
 
         cout << "Benchmarking std::vector...\n";
@@ -113,13 +118,15 @@ void run_benchmarks_list(int operations) {
         cout << "Benchmarking ShiftToMiddleArray...\n";
         cout << "ShiftToMiddleArray (avg over " << runs << " runs): " << stm_avg_time << " ms\n\n";
 
+        cout << "Benchmarking std::list...\n";
+        cout << "std::list (avg over " << runs << " runs): " << list_avg_time << " ms\n\n";
+
         double speedup = ((vector_avg_time - stm_avg_time) / vector_avg_time) * 100;
         cout << "ShiftToMiddleArray was " << abs(speedup) << "% "
              << (speedup < 0 ? "slower" : "faster") << " than std::vector.\n\n";
 
-        //std::list was too slow, so it was ignored
-
         results_file << size << ",std::vector," << vector_avg_time << "," << vector_std << "\n";
+        results_file << size << ",std::list," << list_avg_time << "," << list_std << "\n";
         results_file << size << ",ShiftToMiddleArray," << stm_avg_time << "," << stm_std << "\n";
     }
 

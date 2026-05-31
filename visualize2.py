@@ -58,7 +58,7 @@ def plot_benchmark(file_path):
                 #    plt.annotate('!', (x_pos, 190), ha='center', fontsize=12, color='black')
     
     plt.xticks(x_positions[::3] + (len(containers) * bar_width / 2), test_sizes, rotation=45)
-    plt.xlabel('Container Size')
+    plt.xlabel('Benchmark Result Size')
     plt.ylabel('Relative Time (%)')
     plt.title(os.path.basename(file_path).replace('_', ' ').replace('.csv', ''))
     

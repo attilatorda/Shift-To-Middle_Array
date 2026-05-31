@@ -3,6 +3,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
+def _font_profile(multiplier: float):
+    base = {
+        "title": 12,
+        "label": 11,
+        "tick": 10,
+        "legend": 10,
+        "suptitle": 16,
+    }
+    return {k: max(1, int(v * multiplier)) for k, v in base.items()}
+
 COLORS = {
     "ShiftToMiddleArray": "#d62728",
     "ExpandingRingBuffer": "#2ca02c",
@@ -28,10 +39,11 @@ def _relative_with_error(means, stds):
     return rel, rel_std
 
 
-def plot_two_col_schema(file_path, out_path):
+def plot_two_col_schema(file_path, out_path, font_mult=1.0):
     df = pd.read_csv(file_path)
     sizes = sorted(df["Size"].unique())
     containers = list(df["Type"].unique())
+    fp = _font_profile(font_mult)
 
     bar_w = 0.23
     x = np.arange(len(sizes))
@@ -59,11 +71,11 @@ def plot_two_col_schema(file_path, out_path):
             alpha=0.9,
         )
 
-    plt.xticks(x, sizes, rotation=45)
-    plt.xlabel("Container Size")
-    plt.ylabel("Relative Time (% of best at each size)")
-    plt.title(os.path.basename(file_path).replace("_", " ").replace(".csv", ""))
-    plt.legend()
+    plt.xticks(x, sizes, rotation=45, fontsize=fp["tick"])
+    plt.xlabel("Benchmark Result Size", fontsize=fp["label"])
+    plt.ylabel("Relative Time (% of best at each size)", fontsize=fp["label"])
+    plt.title(os.path.basename(file_path).replace("_", " ").replace(".csv", ""), fontsize=fp["title"])
+    plt.legend(fontsize=fp["legend"])
     plt.grid(axis="y", linestyle="--", alpha=0.3)
     plt.tight_layout()
     plt.savefig(out_path, dpi=220)
@@ -71,7 +83,7 @@ def plot_two_col_schema(file_path, out_path):
     print(f"Saved visualization: {out_path}")
 
 
-def plot_queue_schema(file_path, out_path):
+def plot_queue_schema(file_path, out_path, font_mult=1.0):
     df = pd.read_csv(file_path)
     workloads = [
         ("PushHeavyMeanMs", "PushHeavyStdMs", "Push-heavy (80/20)"),
@@ -80,6 +92,7 @@ def plot_queue_schema(file_path, out_path):
     ]
     sizes = sorted(df["Size"].unique())
     containers = list(df["Type"].unique())
+    fp = _font_profile(font_mult)
 
     fig, axes = plt.subplots(3, 1, figsize=(16, 15), sharex=True)
     bar_w = 0.22
@@ -109,16 +122,16 @@ def plot_queue_schema(file_path, out_path):
             )
 
         ax.set_xticks(x)
-        ax.set_xticklabels(sizes, rotation=45)
-        ax.set_title(title)
+        ax.set_xticklabels(sizes, rotation=45, fontsize=fp["tick"])
+        ax.set_title(title, fontsize=fp["title"])
         ax.grid(axis="y", linestyle="--", alpha=0.3)
 
     for ax in axes:
-        ax.set_ylabel("Relative Time (% of best)")
-    axes[-1].set_xlabel("Container Size")
-    fig.suptitle("Queue benchmarks", fontsize=16)
+        ax.set_ylabel("Relative Time (% of best)", fontsize=fp["label"])
+    axes[-1].set_xlabel("Benchmark Result Size", fontsize=fp["label"])
+    fig.suptitle("Queue benchmarks", fontsize=fp["suptitle"])
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=len(containers), frameon=False)
+    fig.legend(handles, labels, loc="upper center", ncol=len(containers), frameon=False, fontsize=fp["legend"])
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(out_path, dpi=220)
     plt.close(fig)
@@ -126,6 +139,14 @@ def plot_queue_schema(file_path, out_path):
 
 
 def main():
+    # User-requested scaling:
+    # User-requested 20% reduction from 2x => 1.6x on all three figures
+    font_multipliers = {
+        "benchmark_results_list.csv": 1.6,
+        "benchmark_results_deque.csv": 1.6,
+        "benchmark_results_queue.csv": 1.6,
+    }
+
     mappings = [
         ("benchmark_results_list.csv", "benchmark_results_list.png"),
         ("benchmark_results_deque.csv", "benchmark_results_deque.png"),
@@ -138,10 +159,11 @@ def main():
             continue
 
         df = pd.read_csv(src)
+        font_mult = font_multipliers.get(src, 1.0)
         if "TimeMeanMs" in df.columns:
-            plot_two_col_schema(src, dst)
+            plot_two_col_schema(src, dst, font_mult=font_mult)
         elif "PushHeavyMeanMs" in df.columns:
-            plot_queue_schema(src, dst)
+            plot_queue_schema(src, dst, font_mult=font_mult)
         else:
             print(f"Unknown schema, skipping: {src}")
 
