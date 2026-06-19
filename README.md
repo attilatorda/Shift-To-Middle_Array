@@ -100,26 +100,39 @@ After the rejection for publication I implemented the **bias** feature. I plan t
 
 **Is this a gap buffer??**
 
-Yes, similarly to dynamic array, this is also a special case of a gap buffer.
+The Shift-to-Middle (STM) Array can be formally interpreted as a generalization of the gap buffer model.
+
+A classical dynamic array may be described as a degenerate gap buffer in which the gap is always positioned at the end of the buffer. In contrast, STM maintains allocational slack in a way that allows free-space regions to exist near both ends of the logical sequence, and to be repositioned during rebalancing operations.
+
+Unlike a standard gap buffer, STM does not maintain a single contiguous movable gap. Instead, it maintains a distributed slack model across the underlying array, with periodic re-centering and redistribution driven by workload-dependent heuristics.
+
+**Is this a ring buffer?**
+
+No.
+
+Ring buffers implement a circular indexing scheme over a fixed-size or periodically resized array, where logical ordering is defined modulo the array capacity. In such structures, head and tail indices may wrap around, and physical contiguity of elements is not preserved.
+
+STM maintains a linear physical layout invariant: for any valid state, the logical head precedes the logical tail in contiguous memory order. No modular arithmetic over indices is used to represent wrap-around state. As a consequence, iteration over the structure preserves spatial locality in memory.
 
 **Did you reinvent the array-based deque?**
 
-Yes and no! The Shift-to-Middle (STM) Array is an implementation strategy that can be used for various data structures, including lists, queues, and deques. While both STM arrays and traditional array deques use array-backed storage, they optimize for fundamentally different operations and access patterns.
+No direct equivalence holds, although both structures share a contiguous memory representation and support amortized O(1) operations at the boundaries.
 
-Traditional array-based deques provide O(1) operations at their ends but are not optimized for insertions or deletions in the middle. In most implementations, these operations either aren’t supported or require shifting many elements, resulting in O(n) behavior.
-In contrast, the STM Array also provides O(1) performance at the ends but achieves amortized O(1) performance even for insertions and deletions in the middle through its unique shift-to-middle approach.
+Standard array-based deques (circular buffer implementations) optimize primarily for amortized constant-time insertion and deletion at both ends. Operations that modify the middle of the sequence typically require shifting O(n) elements, depending on the position of insertion and current occupancy.
 
-One of the key innovations is the bias system, which allows the STM Array structure to dynamically optimize its internal memory layout based on observed usage patterns – something traditional array deques cannot do. Where an array deque is fixed in its end-optimized behavior, the STM Array automatically adapts to whether the application performs mostly front, middle, or back operations.
+STM retains the same boundary operation guarantees but modifies the cost model for interior updates by introducing a directional shift heuristic. When an insertion or deletion occurs, the implementation selects the smaller of the two affected segments (prefix or suffix relative to the operation site) for relocation. This reduces expected movement cost under non-adversarial access distributions.
 
-This makes the STM Array strictly more versatile. It can efficiently handle all the queue and deque use cases typical of an array deque, while also supporting efficient list-like operations in the middle that would be prohibitively expensive with a traditional array deque.
+In addition, STM introduces a bias parameter used during reallocation events. This parameter influences the placement of the active region within newly allocated storage, effectively encoding a preference for head- or tail-weighted workloads. The intent is to reduce future relocation costs by aligning initial layout with observed access asymmetry.
 
-**Did you use outside help or AI for this project?**
+The resulting structure can be characterized as a contiguous sequence container with adaptive internal alignment, rather than a fixed symmetric deque layout.
 
-I did! The project benefited from both AI assistance and community feedback.
+**Was external assistance used in development?**
 
-AI Help: Even the name "Shift-To-Middle Array" was AI-generated! However, I encountered challenges—when my source files grew large, AI chatbots often made mistakes, so I had to carefully review each modification.
+Yes.
 
-Community Feedback: This project also improved thanks to input from the Hacker News and Reddit (r/algorithms) communities. Their technical insights helped refine the implementation. Special shoutout to these discussions:
+Development included the use of AI-based tools for exploratory design and naming, as well as iterative refinement of implementation details. Due to context limitations in automated tools, all substantive changes required manual verification.
+
+Feedback from public technical discussions (notably Hacker News and r/algorithms) contributed to clarifications of terminology and edge-case behavior.
 
 [Hacker News thread on data structure efficiency](https://news.ycombinator.com/item?id=43456669) <br>
 [Reddit r/algorithms feedback discussion](https://www.reddit.com/r/algorithms/comments/1jix7zi/comment/mjtou49/?context=3)
